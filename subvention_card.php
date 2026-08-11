@@ -434,7 +434,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Thirdparty
 		$morehtmlref .= '<br>'.$object->thirdparty->getNomUrl(1, 'customer');
 		if (!getDolGlobalInt('MAIN_DISABLE_OTHER_LINK') && $object->thirdparty->id > 0) {
-			$morehtmlref .= ' (<a href="'.DOL_URL_ROOT.'/custom/subventions/subvention_list.php?search_fk_soc='.$object->thirdparty->id.'">'.$langs->trans("OthersSubsidys").'</a>)';
+			$url = dol_buildpath('/subventions/subvention_list.php', 1);
+			$url .= '?search_fk_soc='.$object->thirdparty->id;
+
+			$morehtmlref .= ' (<a href="'.$url.'">'.$langs->trans("OthersSubsidys").'</a>)';
 		}
 		// Project
 		if (isModEnabled('project')) {
@@ -642,6 +645,10 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		$includedocgeneration = 1;
 
+		// Création de l'URL nécessaire au bouton
+        $url = dol_buildpath('/subventions/financement_card.php', 1);
+        $url .= '?action=create&origin=subvention&fk_sub='.urlencode($id).'&token='.newToken();
+        
 		// Liste des financeurs
 		print'<table class="notopnoleftnoright table-fiche-title showlinkedobjectblock">
 			<tbody>
@@ -655,7 +662,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					</td>
 					<td class="nobordernopadding titre_right wordbreakimp right valignmiddle col-right">
 						<div class="inline-block valignmiddle">
-							<a class="buttonxxx marginleftonly" href="'.DOL_URL_ROOT.'/subventions/financement_card.php?action=create&amp;origin=subvention&amp;fk_sub='.$id.'" title="'.$langs->trans('AddAFunding').'">
+							<a class="buttonxxx marginleftonly" href="'.$url.'" title="'.$langs->trans('AddAFunding').'">
 								<span class="fa fa-plus-circle valignmiddle paddingleft"></span>
 							</a>
 						<div></div></div>
@@ -727,7 +734,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			</table>
 		</div>';
 
-
+		// Création de l'URL nécessaire au bouton
+        $url = dol_buildpath('/subventions/paiement_card.php', 1);
+        $url .= '?action=create&origin=subvention&fk_sub='.urlencode($id).'&token='.newToken();
 
 		// Liste des paiements associés à la subvention
 		print'<table class="notopnoleftnoright table-fiche-title showlinkedobjectblock">
@@ -742,7 +751,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					</td>
 					<td class="nobordernopadding titre_right wordbreakimp right valignmiddle col-right">
 						<div class="inline-block valignmiddle">
-							<a class="buttonxxx marginleftonly" href="'.DOL_URL_ROOT.'/subventions/paiement_card.php?action=create&amp;origin=subvention&amp;fk_sub='.$id.'" title="'.$langs->trans('AddAPayment').'">
+							<a class="buttonxxx marginleftonly" href="'.$url.'" title="'.$langs->trans('AddAPayment').'">
 								<span class="fa fa-plus-circle valignmiddle paddingleft"></span>
 							</a>
 						<div></div></div>
