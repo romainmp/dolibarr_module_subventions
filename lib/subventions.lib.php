@@ -22,10 +22,11 @@
  */
 
 
-//FBR récupération des erreurs php
+/*
+// FBR récupération des erreurs php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+*/
 
 // Inclusions des classes nécessaires
 dol_include_once('/custom/subventions/class/subvention.class.php');

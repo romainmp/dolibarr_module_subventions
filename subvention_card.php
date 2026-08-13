@@ -45,10 +45,11 @@
 //if (! defined('NOSTYLECHECK'))             define('NOSTYLECHECK', '1');					// Do not check style html tag into posted data
 //if (! defined('NOTOKENRENEWAL'))           define('NOTOKENRENEWAL', '1');					// Do not roll the Anti CSRF token (used if MAIN_SECURITY_CSRF_WITH_TOKEN is on)
 
-//FBR récupération des erreurs php
+/*
+// FBR récupération des erreurs php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+*/
 
 // Load Dolibarr environment
 $res = 0;

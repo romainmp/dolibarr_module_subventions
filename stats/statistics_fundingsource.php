@@ -27,9 +27,11 @@
  */
 
  
-//FBR récupération des erreurs php
+/*
+// FBR récupération des erreurs php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+*/
 
 // Load Dolibarr environment
 $res = 0;
