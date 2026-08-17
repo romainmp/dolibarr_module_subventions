@@ -340,7 +340,7 @@ if (!empty($search['status']) && $search['status'] != '-1') {
     $statusSearched = true;
 }
 if (!$statusSearched) {
-    $sql .= " AND t.status < 5";
+    //$sql .= " AND t.status < 5";
 }
 
 foreach ($search as $key => $val) {
