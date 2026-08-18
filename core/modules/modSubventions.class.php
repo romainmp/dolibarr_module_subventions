@@ -458,6 +458,9 @@ class modSubventions extends DolibarrModules
 		);
 		/* END MODULEBUILDER TOPMENU */
 
+		// TODO Lorsque le fix sera apporté, on pourra retirer les leftmenu= dans les url
+		// https://github.com/Dolibarr/dolibarr/issues/39584
+		
 		/* BEGIN MODULEBUILDER LEFTMENU SUBVENTION */
 		$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=subventions',
@@ -496,7 +499,7 @@ class modSubventions extends DolibarrModules
 			'titre' => 'Liste des subventions',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subvention_list',
-			'url' => '/subventions/subvention_list.php',
+			'url' => '/subventions/subvention_list.php?leftmenu=subvention_list',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions")',
@@ -511,7 +514,7 @@ class modSubventions extends DolibarrModules
 			'titre' => 'Non déposées',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subvention_draft',
-			'url' => '/subventions/subvention_list.php?search_status=0',
+			'url' => '/subventions/subvention_list.php?search_status=0&leftmenu=subvention_list',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions") && $leftmenu==\'subvention_list\'',
@@ -526,7 +529,7 @@ class modSubventions extends DolibarrModules
 			'titre' => 'Attente de réponse',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subvention_validated',
-			'url' => '/subventions/subvention_list.php?search_status=1',
+			'url' => '/subventions/subvention_list.php?search_status=1&leftmenu=subvention_list',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions") && $leftmenu==\'subvention_list\'',
@@ -541,7 +544,7 @@ class modSubventions extends DolibarrModules
 			'titre' => 'Attente de financement',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subvention_accepted',
-			'url' => '/subventions/subvention_list.php?search_status=2',
+			'url' => '/subventions/subvention_list.php?search_status=2&leftmenu=subvention_list',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions") && $leftmenu==\'subvention_list\'',
@@ -556,7 +559,7 @@ class modSubventions extends DolibarrModules
 			'titre' => 'Bilan à déposer',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subvention_evaluated',
-			'url' => '/subventions/subvention_list.php?search_status=3',
+			'url' => '/subventions/subvention_list.php?search_status=3&leftmenu=subvention_list',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions") && $leftmenu==\'subvention_list\'',
@@ -571,7 +574,7 @@ class modSubventions extends DolibarrModules
 			'titre' => 'Clôturé',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subvention_clotured',
-			'url' => '/subventions/subvention_list.php?search_status=5',
+			'url' => '/subventions/subvention_list.php?search_status=5&leftmenu=subvention_list',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions") && $leftmenu==\'subvention_list\'',
@@ -586,7 +589,7 @@ class modSubventions extends DolibarrModules
 			'titre' => 'Refusé',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subvention_refused',
-			'url' => '/subventions/subvention_list.php?search_status=6',
+			'url' => '/subventions/subvention_list.php?search_status=6&leftmenu=subvention_list',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions") && $leftmenu==\'subvention_list\'',
@@ -658,13 +661,15 @@ class modSubventions extends DolibarrModules
 			'user' => 2,
 			'object' => 'Financement'
 		);
+		// TODO Lorsqu'on aura ajouté des statuts aux financement, ajouter un menu accordéon ici.
+		// https://github.com/disQutons/dolibarr_module_subventions/issues/1
 		/*$this->menu[$r++] = array(
 			'fk_menu' => 'fk_mainmenu=subventions,fk_leftmenu=subventions_financement_list',
 			'type' => 'left',
 			'titre' => 'Attente de réponse',
 			'mainmenu' => 'subventions',
 			'leftmenu' => 'subventions_financement_validated',
-			'url' => '/subventions/financement_list.php?search_montant_acc=0&search_montant_ref=0',
+			'url' => '/subventions/financement_list.php?leftmenu=subventions_financement_list&search_montant_fin=0&search_montant_ref=0',
 			'langs' => 'subventions@subventions',
 			'position' => $r,
 			'enabled' => 'isModEnabled("subventions")',
