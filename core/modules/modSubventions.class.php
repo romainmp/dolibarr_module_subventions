@@ -308,32 +308,6 @@ class modSubventions extends DolibarrModules
 
 		/* END MODULEBUILDER TABS */
 
-		// Dictionaries
-		/* Example:
-		 $this->dictionaries=array(
-		 'langs' => 'subventions@subventions',
-		 // List of tables we want to see into dictionary editor
-		 'tabname' => array("table1", "table2", "table3"),
-		 // Label of tables
-		 'tablib' => array("Table1", "Table2", "Table3"),
-		 // Request to select fields
-		 'tabsql' => array('SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table1 as f', 'SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table2 as f', 'SELECT f.rowid as rowid, f.code, f.label, f.active FROM '.MAIN_DB_PREFIX.'table3 as f'),
-		 // Sort order
-		 'tabsqlsort' => array("label ASC", "label ASC", "label ASC"),
-		 // List of fields (result of select to show dictionary)
-		 'tabfield' => array("code,label", "code,label", "code,label"),
-		 // List of fields (list of fields to edit a record)
-		 'tabfieldvalue' => array("code,label", "code,label", "code,label"),
-		 // List of fields (list of fields for insert)
-		 'tabfieldinsert' => array("code,label", "code,label", "code,label"),
-		 // Name of columns with primary key (try to always name it 'rowid')
-		 'tabrowid' => array("rowid", "rowid", "rowid"),
-		 // Condition to show each dictionary
-		 'tabcond' => array(isModEnabled('subventions'), isModEnabled('subventions'), isModEnabled('subventions')),
-		 // Tooltip for every fields of dictionaries: DO NOT PUT AN EMPTY ARRAY
-		 'tabhelp' => array(array('code' => $langs->trans('CodeTooltipHelp'), 'field2' => 'field2tooltip'), array('code' => $langs->trans('CodeTooltipHelp'), 'field2' => 'field2tooltip'), ...),
-		 );
-		 */
 		/* BEGIN MODULEBUILDER DICTIONARIES */
 		$this->dictionaries = array(
 		 'langs' => 'subventions@subventions',
@@ -748,57 +722,6 @@ class modSubventions extends DolibarrModules
 			'object' => 'Paiement'
 		);
 		/* END MODULEBUILDER LEFTMENU PAIEMENT */
-		/* BEGIN MODULEBUILDER LEFTMENU MYOBJECT */
-		/*
-		$this->menu[$r++]=array(
-			'fk_menu' => 'fk_mainmenu=subventions',      // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type' => 'left',                          // This is a Left menu entry
-			'titre' => 'Subvention',
-			'prefix' => img_picto('', $this->picto, 'class="pictofixedwidth valignmiddle paddingright"'),
-			'mainmenu' => 'subventions',
-			'leftmenu' => 'subvention',
-			'url' => '/subventions/subventionsindex.php',
-			'langs' => 'subventions@subventions',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position' => 1000 + $r,
-			'enabled' => 'isModEnabled("subventions")', // Define condition to show or hide menu entry. Use 'isModEnabled("subventions")' if entry must be visible if module is enabled.
-			'perms' => '$user->hasRight("subventions", "subvention", "read")',
-			'target' => '',
-			'user' => 2,				                // 0=Menu for internal users, 1=external users, 2=both
-			'object' => 'Subvention'
-		);
-		$this->menu[$r++]=array(
-			'fk_menu' => 'fk_mainmenu=subventions,fk_leftmenu=subvention',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type' => 'left',			                // This is a Left menu entry
-			'titre' => 'New_Subvention',
-			'mainmenu' => 'subventions',
-			'leftmenu' => 'subventions_subvention_new',
-			'url' => '/subventions/subvention_card.php?action=create',
-			'langs' => 'subventions@subventions',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position' => 1000 + $r,
-			'enabled' => 'isModEnabled("subventions")', // Define condition to show or hide menu entry. Use 'isModEnabled("subventions")' if entry must be visible if module is enabled. Use '$leftmenu==\'system\'' to show if leftmenu system is selected.
-			'perms' => '$user->hasRight("subventions", "subvention", "write")'
-			'target' => '',
-			'user' => 2,				                // 0=Menu for internal users, 1=external users, 2=both
-			'object' => 'Subvention'
-		);
-		$this->menu[$r++]=array(
-			'fk_menu' => 'fk_mainmenu=subventions,fk_leftmenu=subvention',	    // '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
-			'type' => 'left',			                // This is a Left menu entry
-			'titre' => 'List_Subvention',
-			'mainmenu' => 'subventions',
-			'leftmenu' => 'subventions_subvention_list',
-			'url' => '/subventions/subvention_list.php',
-			'langs' => 'subventions@subventions',	        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory.
-			'position' => 1000 + $r,
-			'enabled' => 'isModEnabled("subventions")', // Define condition to show or hide menu entry. Use 'isModEnabled("subventions")' if entry must be visible if module is enabled.
-			'perms' => '$user->hasRight("subventions", "subvention", "read")'
-			'target' => '',
-			'user' => 2,				                // 0=Menu for internal users, 1=external users, 2=both
-			'object' => 'Subvention'
-		);
-		*/
-		/* END MODULEBUILDER LEFTMENU MYOBJECT */
-
 
 		// Exports profiles provided by this module
 		$r = 0;
