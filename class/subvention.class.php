@@ -1050,16 +1050,16 @@ class Subvention extends CommonObject
 		}
 		switch ($status){
 		    case self::STATUS_DRAFT :
-		        $statusType = 'status6';
+		        $statusType = 'status2';
 		        break;
 		    case self::STATUS_VALIDATED :
-		        $statusType = 'status1';
+		        $statusType = 'status3';
 		        break;
 		    case self::STATUS_ACCEPTED :
-		        $statusType = 'status4';
+		        $statusType = 'status1';
 		        break;
 		    case self::STATUS_FINANCED :
-		        $statusType = 'status3';
+		        $statusType = 'status4';
 		        break;
 		    case self::STATUS_CLOTURED :
 		        $statusType = 'status6';
@@ -1071,7 +1071,7 @@ class Subvention extends CommonObject
 		        $statusType = 'status10';
 		        break;
 		    case self::STATUS_CANCELED :
-		        $statusType = 'status10';
+		        $statusType = 'status8';
 		        break;
 		}
 
