@@ -171,8 +171,8 @@ function majMontantsFinancementSubvention($object) {
             // Calcule le montant attendu (montant_acc - somme des paiements) ne peut pas être négatif
             $m_att = ($m_acc - $m_fin < 0) ? 0 : $m_acc - $m_fin;
             
-            // Si aucun montant n'a été saisi on ne calcul rien
-            if (is_null($m_acc)){
+            // Si aucun montant n'a été saisi ou qu'aucune demande n'avait été faite, on ne calcul rien
+            if (is_null($m_acc) || is_null($m_dem) && $m_acc > 0){
                 $m_ref = 0;    
             }
             else{
