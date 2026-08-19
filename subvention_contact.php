@@ -184,7 +184,7 @@ if ($object->id) {
 	$linkback = '<a href="'.dol_buildpath('/subventions/subvention_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
-	/*
+	
 	 // Ref customer
 	 $morehtmlref.=$form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', 0, 1);
 	 $morehtmlref.=$form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', null, null, '', 1);
@@ -219,7 +219,7 @@ if ($object->id) {
 	 $morehtmlref .= '';
 	 }
 	 }
-	 }*/
+	 }
 	$morehtmlref .= '</div>';
 
 	dol_banner_tab($object, 'ref', $linkback, 1, 'ref', 'ref', $morehtmlref, '', 0, '', '', 1);

@@ -825,7 +825,7 @@ class Subvention extends CommonObject
 	 *  @param	int     $save_lastsearch_value      -1=Auto, 0=No save of lastsearch_values when clicking, 1=Save lastsearch_values whenclicking
 	 *  @return	string                              String with URL
 	 */
-	public function getNomUrl($withpicto = 0, $option = '', $notooltip = 0, $morecss = '', $save_lastsearch_value = -1)
+	public function getNomUrl($withpicto = 0, $option = '', $notooltip = 0, $morecss = '', $save_lastsearch_value = -1, $moreparams = '')
 	{
 		global $conf, $langs, $hookmanager;
 
@@ -859,6 +859,9 @@ class Subvention extends CommonObject
 			}
 			if ($url && $add_save_lastsearch_values) {
 				$url .= '&save_lastsearch_values=1';
+			}
+			if ($moreparams) {
+				$url .= $moreparams;
 			}
 		}
 
@@ -1047,16 +1050,16 @@ class Subvention extends CommonObject
 		}
 		switch ($status){
 		    case self::STATUS_DRAFT :
-		        $statusType = 'status6';
+		        $statusType = 'status2';
 		        break;
 		    case self::STATUS_VALIDATED :
-		        $statusType = 'status1';
+		        $statusType = 'status3';
 		        break;
 		    case self::STATUS_ACCEPTED :
-		        $statusType = 'status4';
+		        $statusType = 'status1';
 		        break;
 		    case self::STATUS_FINANCED :
-		        $statusType = 'status3';
+		        $statusType = 'status4';
 		        break;
 		    case self::STATUS_CLOTURED :
 		        $statusType = 'status6';
@@ -1068,7 +1071,7 @@ class Subvention extends CommonObject
 		        $statusType = 'status10';
 		        break;
 		    case self::STATUS_CANCELED :
-		        $statusType = 'status10';
+		        $statusType = 'status8';
 		        break;
 		}
 

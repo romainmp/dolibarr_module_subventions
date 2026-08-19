@@ -220,7 +220,7 @@ if ($object->id > 0) {
 	$linkback = '<a href="'.dol_buildpath('/subventions/subvention_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
 
 	$morehtmlref = '<div class="refidno">';
-	/*
+	
 	// Ref customer
 	$morehtmlref.=$form->editfieldkey("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', 0, 1);
 	$morehtmlref.=$form->editfieldval("RefCustomer", 'ref_client', $object->ref_client, $object, 0, 'string', '', null, null, '', 1);
@@ -255,7 +255,7 @@ if ($object->id > 0) {
 				$morehtmlref .= '';
 			}
 		}
-	}*/
+	}
 	$morehtmlref .= '</div>';
 
 

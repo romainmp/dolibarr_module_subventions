@@ -707,7 +707,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 				print '<tr class="oddeven">';
 				print '<td></td>';
-				print '<td>'.$financement->getNomUrl(1).'</td>';
+				print '<td>'.$financement->getNomUrl(1, '', 0, '', -1, '&sub='.$object->id).'</td>';
 				print '<td>'.$societe->getNomUrl(1).'</td>';
 				print '<td class="right"><span class="amount">'.$obj->montant_dem.'</span></td>';
         		print '<td class="right"><span class="amount">'.$obj->montant_acc.'</span></td>';
@@ -797,7 +797,8 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 				print '<tr class="oddeven">';
 				print '<td></td>';
-				print '<td>'.$paiement->getNomUrl(1).'</td>';
+				
+				print '<td>'.$paiement->getNomUrl(1, '', 0, '', -1, '&sub='.$object->id).'</td>';
 				//print '<td class="center">'.$financement->getNomUrl(1).'</td>';
 				print '<td>'.$societe->getNomUrl(1).'</td>';
 				print '<td class="center"><span class="amount">'.$obj->datep.'</td>';
