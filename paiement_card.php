@@ -118,9 +118,7 @@ $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');	// if not set, $
 $backtopagejsfields = GETPOST('backtopagejsfields', 'alpha');
 $optioncss = GETPOST('optioncss', 'aZ'); // Option for the css output (always '' except when 'print')
 $dol_openinpopup = GETPOST('dol_openinpopup', 'aZ09');
-
-// TODO Lorsque la classe getNomUrl permettra l'ajout de paramètres
-// $sub = GETPOST('origin', 'aZ09');
+$sub = GETPOST('origin', 'aZ09');
 
 if (!empty($backtopagejsfields)) {
 	$tmpbacktopagejsfields = explode(':', $backtopagejsfields);
@@ -483,13 +481,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Object card
 	// ------------------------------------------------------------
-	// TODO Lorsque la classe getNomUrl permettra l'ajout de paramètres
-	//if (empty($sub)){
+	if (empty($sub)){
 		$linkback = '<a href="'.dol_buildpath('/subventions/paiement_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
-	//}
-	//else {
-	//	$linkback = '<a href="'.dol_buildpath('/subventions/subvention_card.php', 1).'?id='.$sub.'">'.$langs->trans("BackToSub").'</a>';
-	//}
+	}
+	else {
+		$linkback = '<a href="'.dol_buildpath('/subventions/subvention_card.php', 1).'?id='.$sub.'">'.$langs->trans("BackToSub").'</a>';
+	}
 	
 	$morehtmlref = '<div class="refidno">';
 	$morehtmlref .= '</div>';
