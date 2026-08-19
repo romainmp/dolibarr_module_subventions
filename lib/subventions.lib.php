@@ -330,13 +330,13 @@ function majstatut ($object){
             if ($m_acc > 0 && $m_att > 0){
                 $stat = 2; // Acceptée
             }
-            elseif ($m_acc == $m_fin && $m_acc + $m_ref == $m_dem && $m_acc > 0){
+            elseif ($m_acc == $m_fin && $m_att == 0 && $m_acc > 0){
                 $stat = 3; // Financée
             }
-            elseif (($m_dem == 0) || ($m_dem > 0 && $m_acc == 0 && $m_ref == 0)){
+            elseif (($m_dem == 0 && is_null($m_acc)) || ($m_dem > 0 && $m_acc == 0 && $m_ref == 0)){
                 $stat = 1; // Validé
             }
-            elseif ($m_acc == 0 && $m_ref == $m_dem && $m_dem > 0){
+            elseif (($m_dem == 0 && $m_acc == 0) || ($m_acc == 0 && $m_ref == $m_dem && $m_dem > 0)){
                 $stat = 6; // Refusé
             }
         
