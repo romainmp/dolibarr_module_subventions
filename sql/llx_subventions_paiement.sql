@@ -31,6 +31,14 @@ CREATE TABLE llx_subventions_paiement(
 	import_key varchar(14), 
 	fk_sub integer, 
 	fk_fin integer, 
+	fk_bank integer,
+	fk_account integer,
+	fk_paiement integer,
+	num_paiement varchar(50),
+	accounted tinyint DEFAULT 0,
+	date_engagement date DEFAULT NULL,
+	fk_bookkeeping_bank integer DEFAULT NULL,
+	fk_bookkeeping_receivable integer DEFAULT NULL,
 	status integer DEFAULT 1 NOT NULL,
 	entity integer DEFAULT 1 NOT NULL
 	-- END MODULEBUILDER FIELDS

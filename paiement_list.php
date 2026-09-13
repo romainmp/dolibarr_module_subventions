@@ -165,18 +165,19 @@ foreach ($object->fields as $key => $val) {
 
 $fieldstosearchall = array();
 // List of fields to search into when doing a "search in all"
-// foreach ($object->fields as $key => $val) {
-// 	if (!empty($val['searchall'])) {
-// 		$fieldstosearchall['t.'.$key] = $val['label'];
-// 	}
-// }
-// $parameters = array('fieldstosearchall'=>$fieldstosearchall);
-// $reshook = $hookmanager->executeHooks('completeFieldsToSearchAll', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
-// if ($reshook > 0) {
-// 	$fieldstosearchall = empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall'];
-// } elseif ($reshook == 0) {
-// 	$fieldstosearchall = array_merge($fieldstosearchall, empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall']);
-// }
+foreach ($object->fields as $key => $val) {
+	if (!empty($val['searchall'])) {
+		$fieldstosearchall['t.'.$key] = $val['label'];
+	}
+}
+$fieldstosearchall['sub.label'] = 'Subvention';
+$parameters = array('fieldstosearchall' => $fieldstosearchall);
+$reshook = $hookmanager->executeHooks('completeFieldsToSearchAll', $parameters, $object, $action); // Note that $action and $object may have been modified by some hooks
+if ($reshook > 0) {
+	$fieldstosearchall = empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall'];
+} elseif ($reshook == 0) {
+	$fieldstosearchall = array_merge($fieldstosearchall, empty($hookmanager->resArray['fieldstosearchall']) ? array() : $hookmanager->resArray['fieldstosearchall']);
+}
 
 // Definition of array of fields for columns
 $tableprefix = 't';
@@ -303,6 +304,7 @@ $morecss = array();
 // --------------------------------------------------------------------
 $sql = "SELECT";
 $sql .= " ".$object->getFieldList('t');
+$sql .= ", sub.label as sub_label, sub.ref as sub_ref";
 // Add fields from extrafields
 if (!empty($extrafields->attributes[$object->table_element]['label'])) {
 	foreach ($extrafields->attributes[$object->table_element]['label'] as $key => $val) {
@@ -318,6 +320,7 @@ $sql = preg_replace('/,\s*$/', '', $sql);
 $sqlfields = $sql; // $sql fields to remove for count total
 
 $sql .= " FROM ".MAIN_DB_PREFIX.$object->table_element." as t";
+$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."subventions_subvention as sub ON sub.rowid = t.fk_sub";
 //$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."anothertable as rc ON rc.parent = t.rowid";
 if (isset($extrafields->attributes[$object->table_element]['label']) && is_array($extrafields->attributes[$object->table_element]['label']) && count($extrafields->attributes[$object->table_element]['label'])) {
 	$sql .= " LEFT JOIN ".MAIN_DB_PREFIX.$object->table_element."_extrafields as ef on (t.rowid = ef.fk_object)";
@@ -345,7 +348,11 @@ foreach ($search as $key => $val) {
 		}
 		if (empty($object->fields[$key]['searchmulti'])) {
 			if (!is_array($search[$key]) && $search[$key] != '') {
-				$sql .= natural_search("t.".$db->escape($key), $search[$key], (($key == 'status') ? 2 : $mode_search));
+				if ($key == 'ref') {
+					$sql .= natural_search(array("t.ref", "sub.label"), $search[$key]);
+				} else {
+					$sql .= natural_search("t.".$db->escape($key), $search[$key], (($key == 'status') ? 2 : $mode_search));
+				}
 			}
 		} else {
 			if (is_array($search[$key]) && !empty($search[$key])) {
@@ -626,7 +633,7 @@ if ($conf->main_checkbox_left_column) {
 foreach ($object->fields as $key => $val) {
 	//$searchkey = empty($search[$key]) ? '' : $search[$key];
 	$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
-	if ($key == 'status') {
+	if ($key == 'status' || $key == 'accounted') {
 		$cssforfield .= ($cssforfield ? ' ' : '').'center';
 	} elseif (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
 		$cssforfield .= ($cssforfield ? ' ' : '').'center';
@@ -694,7 +701,7 @@ if ($conf->main_checkbox_left_column) {
 }
 foreach ($object->fields as $key => $val) {
 	$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
-	if ($key == 'status') {
+	if ($key == 'status' || $key == 'accounted') {
 		$cssforfield .= ($cssforfield ? ' ' : '').'center';
 	} elseif (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
 		$cssforfield .= ($cssforfield ? ' ' : '').'center';
@@ -752,6 +759,7 @@ while ($i < $imaxinloop) {
 
 	// Store properties in $object
 	$object->setVarsFromFetchObj($obj);
+	$object->sub_label = !empty($obj->sub_label) ? $obj->sub_label : '';
 
 	/*
 	$object->thirdparty = null;
@@ -811,13 +819,11 @@ while ($i < $imaxinloop) {
 			$cssforfield = (empty($val['csslist']) ? (empty($val['css']) ? '' : $val['css']) : $val['csslist']);
 			if (in_array($val['type'], array('date', 'datetime', 'timestamp'))) {
 				$cssforfield .= ($cssforfield ? ' ' : '').'center';
-			} elseif ($key == 'status') {
+			} elseif ($key == 'status' || $key == 'accounted') {
 				$cssforfield .= ($cssforfield ? ' ' : '').'center';
 			}
 
 			if (in_array($val['type'], array('timestamp'))) {
-				$cssforfield .= ($cssforfield ? ' ' : '').'nowraponall';
-			} elseif ($key == 'ref') {
 				$cssforfield .= ($cssforfield ? ' ' : '').'nowraponall';
 			}
 
@@ -836,6 +842,22 @@ while ($i < $imaxinloop) {
 					print $object->getLibStatut(5);
 				} elseif ($key == 'rowid') {
 					print $object->showOutputField($val, $key, $object->id, '');
+				} elseif ($key == 'ref') {
+					print '<span class="nowrap">'.$object->showOutputField($val, $key, $object->$key, '').'</span>';
+					if (!empty($obj->sub_label)) {
+						if (!empty($obj->fk_sub)) {
+							print ' - <a href="'.dol_buildpath('/subventions/subvention_card.php', 1).'?id='.$obj->fk_sub.'" class="opacitymedium" title="'.$langs->trans("ShowSubsidy").'">'.dol_escape_htmltag($obj->sub_label).'</a>';
+						} else {
+							print ' - <span class="opacitymedium">'.dol_escape_htmltag($obj->sub_label).'</span>';
+						}
+					}
+				} elseif ($key == 'accounted') {
+					if (!empty($object->accounted)) {
+						$ledgerurl = DOL_URL_ROOT.'/accountancy/bookkeeping/list.php?search_doc_ref='.urlencode($object->ref);
+						print '<a href="'.$ledgerurl.'" title="'.$langs->trans("ViewInLedger").'">'.yn(1, 1).' <span class="fa fa-book-open paddingleft"></span></a>';
+					} else {
+						print yn(0, 1);
+					}
 				} else {
 					print $object->showOutputField($val, $key, $object->$key, '');
 				}

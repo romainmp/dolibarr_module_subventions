@@ -148,7 +148,7 @@ class modSubventions extends DolibarrModules
 		$this->editor_squarred_logo = 'logo_disQutons.png@subventions';					// Must be image filename into the module/img directory followed with @modulename. Example: 'myimage.png@subventions'
 
 		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
-		$this->version = '1.2';
+		$this->version = '1.3.0';
 		// Url to the file with your last numberversion of this module
 		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
 
@@ -191,7 +191,7 @@ class modSubventions extends DolibarrModules
 			),
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			/* BEGIN MODULEBUILDER HOOKSCONTEXTS */
-			'hooks' => array('data' => array('thirdpartycard','projectOverview',),'entity' => '0',),
+			'hooks' => array('data' => array('thirdpartycard','projectOverview','accountingjournaldao',),'entity' => '0',),
 			
 									
 			/*'hooks' => array(
@@ -342,21 +342,21 @@ class modSubventions extends DolibarrModules
 		 // Label of tables
 		 'tablib' => array("Subventions : Financeurs principaux et comptabilité"),
 		 // Request to select fields
-		 'tabsql' => array('SELECT f.rowid as rowid, f.ref, f.label, f.accountancy_code, f.active, f.position FROM '.MAIN_DB_PREFIX.'c_subventions_financeur as f'),
+		 'tabsql' => array('SELECT f.rowid as rowid, f.ref, f.label, f.accountancy_code, f.accountancy_code_receivable, f.active, f.position FROM '.MAIN_DB_PREFIX.'c_subventions_financeur as f'),
 		 // Sort order
 		 'tabsqlsort' => array("position ASC, rowid ASC"),
 		 // List of fields (result of select to show dictionary)
-		 'tabfield' => array("ref,label,accountancy_code,position"),
+		 'tabfield' => array("ref,label,accountancy_code,accountancy_code_receivable,position"),
 		 // List of fields (list of fields to edit a record)
-		 'tabfieldvalue' => array("label,accountancy_code,position"),
+		 'tabfieldvalue' => array("label,accountancy_code,accountancy_code_receivable,position"),
 		 // List of fields (list of fields for insert)
-		 'tabfieldinsert' => array("ref,label,accountancy_code,position"),
+		 'tabfieldinsert' => array("ref,label,accountancy_code,accountancy_code_receivable,position"),
 		 // Name of columns with primary key (try to always name it 'rowid')
 		 'tabrowid' => array("rowid"),
 		 // Condition to show each dictionary
 		 'tabcond' => array(isModEnabled('subventions')),
 		 // Tooltip for every fields of dictionaries: DO NOT PUT AN EMPTY ARRAY
-		 'tabhelp' => array(array('code' => $langs->trans('CodeTooltipHelp'),),),
+		 'tabhelp' => array(array('code' => $langs->trans('CodeTooltipHelp'), 'accountancy_code' => $langs->trans('AccountancyCodeProductHelp'), 'accountancy_code_receivable' => $langs->trans('AccountancyCodeReceivableHelp'))),
 		 );
 		/* END MODULEBUILDER DICTIONARIES */
 
@@ -1151,7 +1151,46 @@ class modSubventions extends DolibarrModules
 			curl_exec($ch);   // on lance et on ignore volontairement la réponse
 			curl_close($ch);
 		}
-		
+
+		// Mise à jour structurelle pour la v1.3.0 (colonnes comptables & bancaires)
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'c_subventions_financeur', 'accountancy_code_receivable')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'c_subventions_financeur', 'accountancy_code_receivable', array('type' => 'varchar', 'value' => '32', 'null' => 'NULL'), 'accountancy_code');
+			$defaults = array(
+				'SF_AUTRE' => '4410', 'SF_ETAT' => '4411', 'SF_REG' => '4412', 'SF_DEP' => '4413',
+				'SF_COM' => '4414', 'SF_SOC' => '4418', 'SF_EUR' => '4415', 'SF_ASP' => '4416',
+				'SF_PUB' => '4418', 'SF_PRI' => '4419'
+			);
+			foreach ($defaults as $ref => $code) {
+				$this->db->query("UPDATE ".MAIN_DB_PREFIX."c_subventions_financeur SET accountancy_code_receivable = '".$this->db->escape($code)."' WHERE ref = '".$this->db->escape($ref)."' AND (accountancy_code_receivable IS NULL OR accountancy_code_receivable = '')");
+			}
+		}
+
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_financement', 'accounted')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_financement', 'accounted', array('type' => 'tinyint', 'default' => 0, 'null' => 'NOT NULL'));
+		}
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_financement', 'date_engagement')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_financement', 'date_engagement', array('type' => 'date', 'null' => 'NULL'));
+		}
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_financement', 'fk_bookkeeping_receivable')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_financement', 'fk_bookkeeping_receivable', array('type' => 'integer', 'null' => 'NULL'));
+		}
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_financement', 'fk_bookkeeping_product')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_financement', 'fk_bookkeeping_product', array('type' => 'integer', 'null' => 'NULL'));
+		}
+
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_paiement', 'fk_bank')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_paiement', 'fk_bank', array('type' => 'integer', 'null' => 'NULL'));
+		}
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_paiement', 'fk_account')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_paiement', 'fk_account', array('type' => 'integer', 'null' => 'NULL'));
+		}
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_paiement', 'fk_paiement')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_paiement', 'fk_paiement', array('type' => 'integer', 'null' => 'NULL'));
+		}
+		if (!$this->db->DDLDescTable(MAIN_DB_PREFIX.'subventions_paiement', 'num_paiement')) {
+			$this->db->DDLAddField(MAIN_DB_PREFIX.'subventions_paiement', 'num_paiement', array('type' => 'varchar', 'value' => '50', 'null' => 'NULL'));
+		}
+
 		return $this->_init($sql, $options);
 	}
 

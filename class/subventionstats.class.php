@@ -33,6 +33,7 @@ ini_set('display_errors', 1);
 
 
 include_once DOL_DOCUMENT_ROOT.'/core/class/stats.class.php';
+require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
 dol_include_once('/custom/subventions/class/subvention.class.php');
 dol_include_once('/custom/subventions/class/financement.class.php');
 dol_include_once('/custom/subventions/class/paiement.class.php');
@@ -103,6 +104,9 @@ class SubventionStats extends Stats
 
 		if ($this->mode == 'subvention') {
 			$this->date_stat = getDolGlobalString('SUBVENTIONS_STATISTIC_DATE');
+			if (empty($this->date_stat)) {
+				$this->date_stat = 'date_creation';
+			}
 			$object = new Subvention($this->db);
 			
 			if ($this->fundingsource > 0) {
@@ -223,8 +227,13 @@ class SubventionStats extends Stats
 	 */
 	public function getAllByYear()
 	{
-		$this->date_stat = getDolGlobalString('SUBVENTIONS_STATISTIC_DATE');
-		$sql = "SELECT date_format(".$this->date_stat.",'%Y') as year, count(*) as nb, sum(x.".$this->montant.") as total, avg(x.".$this->montant.") as avg";
+		if (empty($this->date_stat)) {
+			$this->date_stat = getDolGlobalString('SUBVENTIONS_STATISTIC_DATE');
+		}
+		if (empty($this->date_stat)) {
+			$this->date_stat = 'date_creation';
+		}
+		$sql = "SELECT date_format(x.".$this->date_stat.",'%Y') as year, count(*) as nb, sum(x.".$this->montant.") as total, avg(x.".$this->montant.") as avg";
 		$sql .= " FROM ".$this->from;
 		$sql .= " WHERE ".$this->where;
 		$sql .= " GROUP BY year";
@@ -242,26 +251,29 @@ class SubventionStats extends Stats
 	public function getStatsFundingSource($sumary, $year = 0)
 	{
 		$this->date_stat = getDolGlobalString('SUBVENTIONS_STATISTIC_DATE');
+		if (empty($this->date_stat)) {
+			$this->date_stat = 'date_creation';
+		}
 		if ($sumary){
-			$sql = "SELECT x.fk_soc, COUNT(x.ref) AS nb, SUM(x.montant_dem) as montant_dem, SUM(x.montant_acc) as montant_acc, SUM(x.montant_fin) as montant_fin, COALESCE(y.".$this->date_stat.", y.date_creation) as date, x.fk_financeur, s.label as nom";
+			$sql = "SELECT MAX(x.fk_soc) as fk_soc, COUNT(x.ref) AS nb, SUM(x.montant_dem) as montant_dem, SUM(x.montant_acc) as montant_acc, SUM(x.montant_fin) as montant_fin, MAX(COALESCE(y.".$this->date_stat.", y.date_creation)) as date, x.fk_financeur, s.label as nom";
 			$sql .= " FROM ".$this->from;
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."c_subventions_financeur as s ON s.rowid = x.fk_financeur";
 			$sql .= " WHERE ".$this->where;
 			if ($year > 0) {
 				$sql .= " AND ".dolSqlDateFilter('y.'.$this->date_stat, 0, 0, (int) $year, 1);
 			}
-			$sql .= " GROUP BY x.fk_financeur";
+			$sql .= " GROUP BY x.fk_financeur, s.label, s.position";
 			$sql .= $this->db->order('s.position', 'ASC');
 		}
 		else {
-			$sql = "SELECT x.fk_soc, COUNT(x.ref) AS nb, SUM(x.montant_dem) as montant_dem, SUM(x.montant_acc) as montant_acc, SUM(x.montant_fin) as montant_fin, COALESCE(y.".$this->date_stat.", y.date_creation) as date, s.nom";
+			$sql = "SELECT x.fk_soc, COUNT(x.ref) AS nb, SUM(x.montant_dem) as montant_dem, SUM(x.montant_acc) as montant_acc, SUM(x.montant_fin) as montant_fin, MAX(COALESCE(y.".$this->date_stat.", y.date_creation)) as date, s.nom";
 			$sql .= " FROM ".$this->from;
 			$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s ON s.rowid = x.fk_soc";
 			$sql .= " WHERE ".$this->where;
 			if ($year > 0) {
 				$sql .= " AND ".dolSqlDateFilter('y.'.$this->date_stat, 0, 0, (int) $year, 1);
 			}
-			$sql .= " GROUP BY x.fk_soc";
+			$sql .= " GROUP BY x.fk_soc, s.nom";
 			$sql .= $this->db->order('s.nom', 'ASC');
 		}
 
@@ -280,7 +292,7 @@ class SubventionStats extends Stats
 					'montant_fin' => $obj->montant_fin,
 					'date_creation' => $obj->date,
 					'nom' => $obj->nom,
-					'fk_financeur' => $obj->fk_financeur
+					'fk_financeur' => isset($obj->fk_financeur) ? $obj->fk_financeur : 0
 				);
 				$i++;
 			}

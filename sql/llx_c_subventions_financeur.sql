@@ -19,6 +19,7 @@ CREATE TABLE llx_c_subventions_financeur (
     ref varchar(12) NOT NULL,
     label varchar(128) NOT NULL,
     accountancy_code varchar(32) DEFAULT NULL,
+    accountancy_code_receivable varchar(32) DEFAULT NULL,
     active tinyint(4) NOT NULL DEFAULT 1,
     module varchar(32) DEFAULT NULL,
     position int(11) NOT NULL DEFAULT 0,
@@ -26,16 +27,16 @@ CREATE TABLE llx_c_subventions_financeur (
 ) ENGINE=innodb;
 
 -- Insertion des données par défaut
-INSERT INTO llx_c_subventions_financeur (`rowid`, `ref`, `label`, `accountancy_code`, `active`, `module`, `position`, `type`)
+INSERT INTO llx_c_subventions_financeur (`rowid`, `ref`, `label`, `accountancy_code`, `accountancy_code_receivable`, `active`, `module`, `position`, `type`)
 VALUES
-	(1, 'SF_AUTRE', 'Autre', '7400', 1, NULL, 1, 0),
-    (2, 'SF_ETAT', 'État', '7401', 1, NULL, 2, 0),
-    (3, 'SF_REG', 'Région', '7402', 1, NULL, 3, 0),
-    (4, 'SF_DEP', 'Département', '7403', 1, NULL, 4, 0),
-    (5, 'SF_COM', 'Commune', '7404', 1, NULL, 5, 0),
-    (6, 'SF_SOC', 'Organismes sociaux (CAF, etc.)', '7408', 1, NULL, 6, 0),
-    (7, 'SF_EUR', 'Fonds européens (FSE, FEDER, etc.)', '7405', 1, NULL, 7, 0),
-    (8, 'SF_ASP', 'L\'agence de services et de paiement (emplois aidés)', '7406', 1, NULL, 8, 0),
-    (9, 'SF_PUB', 'Autres établissements publics', '7408', 1, NULL, 9, 0),
-    (10, 'SF_PRI', 'Aides privées (fondation)', '7409', 1, NULL, 10, 0);
+	(1, 'SF_AUTRE', 'Autre', '7400', '4410', 1, NULL, 1, 0),
+    (2, 'SF_ETAT', 'État', '7401', '4411', 1, NULL, 2, 0),
+    (3, 'SF_REG', 'Région', '7402', '4412', 1, NULL, 3, 0),
+    (4, 'SF_DEP', 'Département', '7403', '4413', 1, NULL, 4, 0),
+    (5, 'SF_COM', 'Commune', '7404', '4414', 1, NULL, 5, 0),
+    (6, 'SF_SOC', 'Organismes sociaux (CAF, etc.)', '7408', '4418', 1, NULL, 6, 0),
+    (7, 'SF_EUR', 'Fonds européens (FSE, FEDER, etc.)', '7405', '4415', 1, NULL, 7, 0),
+    (8, 'SF_ASP', 'L\'agence de services et de paiement (emplois aidés)', '7406', '4416', 1, NULL, 8, 0),
+    (9, 'SF_PUB', 'Autres établissements publics', '7408', '4418', 1, NULL, 9, 0),
+    (10, 'SF_PRI', 'Aides privées (fondation)', '7409', '4419', 1, NULL, 10, 0);
 

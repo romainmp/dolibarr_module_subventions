@@ -214,6 +214,19 @@ if (empty($reshook)) {
 	// Actions cancel, add, update, update_extras, confirm_validate, confirm_delete, confirm_deleteline, confirm_clone, confirm_close, confirm_setdraft, confirm_reopen
 	include DOL_DOCUMENT_ROOT.'/core/actions_addupdatedelete.inc.php';
 
+	// Create bank line if payment was added or updated with a bank account and does not have a bank line yet
+	if (in_array(GETPOST('action', 'aZ09'), array('add', 'update')) && !empty($object->id) && empty($object->fk_bank)) {
+		$accountid = GETPOSTINT('fk_account');
+		$paiement_type = GETPOSTINT('fk_paiement');
+		$num_paiement = GETPOST('num_paiement', 'alphanohtml');
+		if ($accountid > 0 && isModEnabled('banque')) {
+			$res_bank = $object->addPaymentToBank($user, $accountid, $paiement_type, '', $num_paiement);
+			if ($res_bank < 0) {
+				setEventMessages($object->error, $object->errors, 'warnings');
+			}
+		}
+	}
+
 	// Actions when linking object each other
 	include DOL_DOCUMENT_ROOT.'/core/actions_dellink.inc.php';
 
@@ -231,6 +244,41 @@ if (empty($reshook)) {
 	}
 	if ($action == 'classin' && $permissiontoadd) {
 		$object->setProject(GETPOSTINT('projectid'));
+	}
+
+	// Actions for accounting engagement
+	if ($action == 'confirm_bookkeep' && $confirm == 'yes' && $permissiontoadd) {
+		$date_engagement = dol_mktime(12, 0, 0, GETPOSTINT('date_engagementmonth'), GETPOSTINT('date_engagementday'), GETPOSTINT('date_engagementyear'));
+		if (empty($date_engagement)) {
+			$date_engagement = dol_now();
+		}
+		$journal = GETPOST('journal', 'alpha');
+		$account_bank = GETPOST('account_bank', 'alpha');
+		$account_receivable = GETPOST('account_receivable', 'alpha');
+		$label = GETPOST('label_engagement', 'restricthtml');
+		$subledger = GETPOST('subledger_account', 'alpha');
+
+		$res = $object->bookkeep($user, $date_engagement, $journal, $account_bank, $account_receivable, $label, $subledger);
+		if ($res > 0) {
+			setEventMessages($langs->trans("SubventionBookkeptSuccess"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+			exit;
+		} else {
+			setEventMessages($object->error, $object->errors, 'errors');
+			$action = '';
+		}
+	}
+
+	if ($action == 'confirm_unbookkeep' && $confirm == 'yes' && $permissiontoadd) {
+		$res = $object->unbookkeep($user);
+		if ($res > 0) {
+			setEventMessages($langs->trans("SubventionUnbookkeptSuccess"), null, 'mesgs');
+			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
+			exit;
+		} else {
+			setEventMessages($object->error, $object->errors, 'errors');
+			$action = '';
+		}
 	}
 }
 
@@ -464,6 +512,73 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans('XXX'), $text, 'confirm_xxx', $formquestion, 0, 1, 220);
 	}
 
+	// Confirmation of accounting engagement
+	if ($action == 'bookkeep') {
+		$default_bank_account = '512000';
+		if (!empty($object->fk_account)) {
+			require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+			$acc_tmp = new Account($db);
+			if ($acc_tmp->fetch($object->fk_account) > 0 && !empty($acc_tmp->account_number)) {
+				$default_bank_account = $acc_tmp->account_number;
+			}
+		}
+
+		$default_receivable = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT', '441000');
+		if ($object->fk_fin > 0) {
+			dol_include_once('/subventions/class/financement.class.php');
+			$fin_tmp = new Financement($db);
+			if ($fin_tmp->fetch($object->fk_fin) > 0 && $fin_tmp->fk_financeur > 0) {
+				$sqlf = "SELECT accountancy_code_receivable, accountancy_code FROM ".MAIN_DB_PREFIX."c_subventions_financeur WHERE rowid = ".((int) $fin_tmp->fk_financeur);
+				$resf = $db->query($sqlf);
+				if ($resf && ($objf = $db->fetch_object($resf))) {
+					if (!empty($objf->accountancy_code_receivable)) {
+						$default_receivable = $objf->accountancy_code_receivable;
+					} elseif (!empty($objf->accountancy_code)) {
+						$default_receivable = $objf->accountancy_code;
+					}
+				}
+			}
+		}
+
+		$TJournal = array();
+		if (isModEnabled('accounting') || isModEnabled('accountancy')) {
+			$sqlj = "SELECT code, label FROM ".MAIN_DB_PREFIX."accounting_journal WHERE active = 1 ORDER BY label";
+			$resj = $db->query($sqlj);
+			if ($resj) {
+				while ($objj = $db->fetch_object($resj)) {
+					$TJournal[$objj->code] = $objj->code.' - '.$objj->label;
+				}
+			}
+		}
+		if (empty($TJournal)) {
+			$TJournal['OD'] = 'OD - '.$langs->trans("VariousOperations");
+		}
+		$default_journal = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL', 'OD');
+
+		$thirdparty = new Societe($db);
+		if ($object->fk_soc > 0) {
+			$thirdparty->fetch($object->fk_soc);
+		}
+		$default_subledger = !empty($thirdparty->code_compta_client) ? $thirdparty->code_compta_client : '';
+
+		$formquestion = array(
+			array('type' => 'date', 'name' => 'date_engagement', 'label' => $langs->trans("EngagementDate"), 'value' => dol_now()),
+			array('type' => 'select', 'name' => 'journal', 'label' => $langs->trans("Journal"), 'values' => $TJournal, 'default' => $default_journal, 'morecss' => 'minwidth300'),
+			array('type' => 'text', 'name' => 'account_bank', 'label' => $langs->trans("SubventionBankAccount").' (Débit)', 'value' => $default_bank_account, 'morecss' => 'minwidth200'),
+			array('type' => 'text', 'name' => 'subledger_account', 'label' => $langs->trans("SubledgerAccount").' (Tiers)', 'value' => $default_subledger, 'morecss' => 'minwidth200'),
+			array('type' => 'text', 'name' => 'account_receivable', 'label' => $langs->trans("SubventionReceivableAccount").' (Crédit)', 'value' => $default_receivable, 'morecss' => 'minwidth200'),
+			array('type' => 'text', 'name' => 'label_engagement', 'label' => $langs->trans("Label"), 'value' => $langs->trans("SubventionPayment").': '.$object->ref.' ('.$thirdparty->name.')', 'morecss' => 'centpercent minwidth400'),
+		);
+
+		$text = $langs->trans("ConfirmBookkeepPayment", price($object->montant, 0, $langs, 1, -1, -1, $conf->currency));
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("BookkeepPayment"), $text, 'confirm_bookkeep', $formquestion, 'yes', 1, 'auto', 780);
+	}
+
+	if ($action == 'unbookkeep') {
+		$text = $langs->trans("ConfirmUnbookkeepPayment");
+		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("UnbookkeepPayment"), $text, 'confirm_unbookkeep', array(), 'yes', 1, 'auto', 550);
+	}
+
 	// Call Hook formConfirm
 	$parameters = array('formConfirm' => $formconfirm, 'lineid' => $lineid);
 	$reshook = $hookmanager->executeHooks('formConfirm', $parameters, $object, $action); // Note that $action and $object may have been modified by hook
@@ -501,6 +616,28 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Other attributes. Fields from hook formObjectOptions and Extrafields.
 	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_view.tpl.php';
+
+	if (!empty($object->fk_bank) && isModEnabled('banque')) {
+		require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+		$acc_line = new AccountLine($db);
+		if ($acc_line->fetch($object->fk_bank) > 0) {
+			print '<tr><td class="titlefield">'.$langs->trans("BankTransactionLine").'</td>';
+			print '<td><a href="'.DOL_URL_ROOT.'/compta/bank/line.php?rowid='.$object->fk_bank.'"><i class="fa fa-university"></i> '.$langs->trans("ShowBankTransaction").' (#'.$object->fk_bank.')</a></td></tr>';
+		}
+	}
+
+	if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+		print '<tr><td class="titlefield">'.$langs->trans("Accounted").'</td>';
+		if (!empty($object->accounted)) {
+			print '<td><span class="badge badge-status4 badge-status"><i class="fa fa-check"></i> '.$langs->trans("Accounted").'</span>';
+			if (!empty($object->date_engagement)) {
+				print ' <span class="opacitymedium">('.$langs->trans("EngagementDate").': '.dol_print_date($object->date_engagement, 'day').')</span>';
+			}
+			print '</td></tr>';
+		} else {
+			print '<td><span class="badge badge-status0 badge-status">'.$langs->trans("NotAccounted").'</span></td></tr>';
+		}
+	}
 
 	print '</table>';
 	print '</div>';
@@ -577,6 +714,16 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		if (empty($reshook)) {
 			// Modify
 			print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
+
+			// Accounting engagement (OD)
+			if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+				if (empty($object->accounted) && !empty($object->montant) && $object->montant > 0) {
+					print dolGetButtonAction('', $langs->trans('BookkeepInLedger'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=bookkeep&token='.newToken(), '', $permissiontoadd);
+				} elseif (!empty($object->accounted)) {
+					print dolGetButtonAction('', $langs->trans('UnbookkeepInLedger'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=unbookkeep&token='.newToken(), '', $permissiontoadd);
+					print dolGetButtonAction('', $langs->trans('ViewInLedger'), 'default', DOL_URL_ROOT.'/accountancy/bookkeeping/list.php?search_doc_ref='.urlencode($object->ref), '', 1);
+				}
+			}
 
 			// Delete (with preloaded confirm popup)
 			$deleteUrl = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=delete&token='.newToken();

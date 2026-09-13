@@ -169,10 +169,35 @@ $item->defaultFieldValue = '50';
 $item->fieldAttr['placeholder'] = '% entre 0 et 100';
 
 // ACCOUNTANCY
-// TODO Implement accountancy parameters
-// $formSetup->newItem('AccountancyModule')->setAsTitle();
+$formSetup->newItem('AccountancyModule')->setAsTitle();
 
-// $item = $formSetup->newItem('SUBVENTIONS_DICO_COMPTA')->setAsYesNo();
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_ENABLED')->setAsYesNo();
+$item->defaultFieldValue = '1';
+
+// Journals list
+$TJournal = array('' => '');
+if (isModEnabled('accounting') || isModEnabled('accountancy')) {
+	$sql = "SELECT rowid, code, label FROM ".MAIN_DB_PREFIX."accounting_journal WHERE active = 1 ORDER BY label";
+	$resql = $db->query($sql);
+	if ($resql) {
+		while ($objj = $db->fetch_object($resql)) {
+			$TJournal[$objj->code] = $objj->code.' - '.$objj->label;
+		}
+	}
+}
+if (empty($TJournal) || count($TJournal) <= 1) {
+	$TJournal['OD'] = 'OD - '.$langs->trans("VariousOperations");
+}
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_JOURNAL')->setAsSelect($TJournal);
+$item->defaultFieldValue = 'OD';
+
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT');
+$item->defaultFieldValue = '441000';
+$item->fieldAttr['placeholder'] = '441000';
+
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_CODE_PRODUCT_DEFAULT');
+$item->defaultFieldValue = '740000';
+$item->fieldAttr['placeholder'] = '740000';
 
 // End of definition of parameters
 

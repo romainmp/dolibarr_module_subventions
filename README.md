@@ -10,8 +10,7 @@ Module permettant de suivre les demandes de subventions :
 
 - Statistiques par année, financeurs et groupe de financeurs
 - [Module Projets]  Possibilité d'ajouter les subventions à la vue d'ensemble
-- [Module Tiers] Ajout d'un onglet au sein de la fiche tiers des projets
-<!---- [Module Comptablité] Lien entre les paiements et comptabilité Dolibarr-->
+- [Module Comptabilité] Engagement (OD : Débit 441 / Crédit 74x) et encaissement bancaire (Banque 512 / Crédit 441) dans Dolibarr
 
 ## Installation
 Vous pouvez copier ces fichiers, directement dans le dossier custom/subventions de votre Dolibarr. Vous aurez ainsi la version la plus à jour.
