@@ -27,10 +27,11 @@
  */
 
  
-//FBR récupération des erreurs php
+/*
+// FBR récupération des erreurs php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+*/
 
 include_once DOL_DOCUMENT_ROOT.'/core/class/stats.class.php';
 require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';

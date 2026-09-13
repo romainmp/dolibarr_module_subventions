@@ -45,10 +45,11 @@
 //if (! defined('NOSTYLECHECK'))             define('NOSTYLECHECK', '1');					// Do not check style html tag into posted data
 //if (! defined('NOTOKENRENEWAL'))           define('NOTOKENRENEWAL', '1');					// Do not roll the Anti CSRF token (used if MAIN_SECURITY_CSRF_WITH_TOKEN is on)
 
+/*
 // FBR récupération des erreurs php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
+*/
 
 // Load Dolibarr environment
 $res = 0;
@@ -117,6 +118,7 @@ $backtopageforcancel = GETPOST('backtopageforcancel', 'alpha');	// if not set, $
 $backtopagejsfields = GETPOST('backtopagejsfields', 'alpha');
 $optioncss = GETPOST('optioncss', 'aZ'); // Option for the css output (always '' except when 'print')
 $dol_openinpopup = GETPOST('dol_openinpopup', 'aZ09');
+$sub = GETPOST('origin', 'aZ09');
 
 if (!empty($backtopagejsfields)) {
 	$tmpbacktopagejsfields = explode(':', $backtopagejsfields);
@@ -594,8 +596,13 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 	// Object card
 	// ------------------------------------------------------------
-	$linkback = '<a href="'.dol_buildpath('/subventions/paiement_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
-
+	if (empty($sub)){
+		$linkback = '<a href="'.dol_buildpath('/subventions/paiement_list.php', 1).'?restore_lastsearch_values=1'.(!empty($socid) ? '&socid='.$socid : '').'">'.$langs->trans("BackToList").'</a>';
+	}
+	else {
+		$linkback = '<a href="'.dol_buildpath('/subventions/subvention_card.php', 1).'?id='.$sub.'">'.$langs->trans("BackToSub").'</a>';
+	}
+	
 	$morehtmlref = '<div class="refidno">';
 	$morehtmlref .= '</div>';
 
