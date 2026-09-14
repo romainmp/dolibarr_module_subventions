@@ -162,6 +162,7 @@ bytes=octets
 # Project ventilation (multi-projects)
 #
 ProjectVentilation=Ventilation projets
+ListOfFundedProjects=Liste des projets financés
 AddProjectVentilation=Ajouter une ventilation
 AllocatedAmount=Montant ventilé
 AllocatedPercentage=Pourcentage

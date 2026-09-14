@@ -150,6 +150,7 @@ bytes=bytes
 # Project ventilation (multi-projects)
 #
 ProjectVentilation=Project allocation
+ListOfFundedProjects=List of funded projects
 AddProjectVentilation=Add allocation
 AllocatedAmount=Allocated amount
 AllocatedPercentage=Percentage

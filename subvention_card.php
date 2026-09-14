@@ -932,7 +932,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 							<div class="titre inline-block">
 								<span class="inline-block valignmiddle">';
 								print img_picto('', 'project', 'class="pictofixedwidth"');
-								print $langs->trans('ProjectVentilation');
+								print $langs->trans('ListOfFundedProjects');
 							print '</span>
 							</div>
 						</td>
