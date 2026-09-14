@@ -114,6 +114,16 @@ class SubventionProject extends CommonObject
 	public $thirdparty;
 
 	/**
+	 * @var int Third party ID (fk_soc)
+	 */
+	public $fk_soc;
+
+	/**
+	 * @var int Third party ID (socid alias)
+	 */
+	public $socid;
+
+	/**
 	 * @var int User who modified
 	 */
 	public $fk_user_modif;
@@ -232,6 +242,8 @@ class SubventionProject extends CommonObject
 				$this->status = $obj->subvention_status;
 
 				if (!empty($obj->fk_soc)) {
+					$this->fk_soc = (int) $obj->fk_soc;
+					$this->socid = (int) $obj->fk_soc;
 					require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
 					$this->thirdparty = new Societe($this->db);
 					$this->thirdparty->fetch($obj->fk_soc);
@@ -383,18 +395,49 @@ class SubventionProject extends CommonObject
 	}
 
 	/**
+	 * Return the label of a given status
+	 *
+	 * @param  int $mode 0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=Short label + Picto, 6=Long label + Picto
+	 * @return string    Label of status
+	 */
+	public function getLibStatut($mode = 0)
+	{
+		return $this->LibStatut($this->status, $mode);
+	}
+
+	// phpcs:disable PEAR.NamingConventions.ValidFunctionName.ScopeNotCamelCaps
+	/**
+	 * Return the label of a given status
+	 *
+	 * @param  int $status Id status
+	 * @param  int $mode   0=long label, 1=short label, 2=Picto + short label, 3=Picto, 4=Picto + long label, 5=Short label + Picto, 6=Long label + Picto
+	 * @return string      Label of status
+	 */
+	public function LibStatut($status, $mode = 0)
+	{
+		dol_include_once('/custom/subventions/class/subvention.class.php');
+		$subvention = new Subvention($this->db);
+		return $subvention->LibStatut($status, $mode);
+	}
+
+
+	/**
 	 * Return a link to the subvention card
 	 *
-	 * @param  int    $withpicto  Add picto into link
-	 * @return string             HTML String with link
+	 * @param  int    $withpicto             Add picto into link
+	 * @param  string $option                Where point the link (0=>card, 1=>card)
+	 * @param  int    $notooltip             1=Disable tooltip
+	 * @param  string $moreparam             Add more parameters into link
+	 * @param  int    $save_lastsearch_value -1=Auto, 0=No save of lastsearch_values, 1=Save lastsearch_values
+	 * @return string                        HTML String with link
 	 */
-	public function getNomUrl($withpicto = 0)
+	public function getNomUrl($withpicto = 0, $option = '', $notooltip = 0, $moreparam = '', $save_lastsearch_value = -1)
 	{
 		dol_include_once('/custom/subventions/class/subvention.class.php');
 
 		$subvention = new Subvention($this->db);
 		if ($subvention->fetch($this->fk_subvention) > 0) {
-			return $subvention->getNomUrl($withpicto);
+			return $subvention->getNomUrl($withpicto, $option, $notooltip, $moreparam, $save_lastsearch_value);
 		}
 		return '';
 	}
