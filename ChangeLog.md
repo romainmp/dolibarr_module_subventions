@@ -2,11 +2,13 @@
 ## 1.3
 - ADD Intégration comptable complète : engagement (OD) par financeur dans le Grand Livre (Débit 441x / Crédit 74xx)
 - ADD Prise en charge des comptes de créance (441x) dans le dictionnaire des financeurs
-- ADD Paramétrage de la comptabilité avancée (activation, journal OD par défaut, comptes par défaut)
-- ADD Boutons d'action pour comptabiliser et annuler l'engagement sur les fiches de financements
+- ADD Paramétrage de la comptabilité avancée (activation, journal OD, journal de paiement/banque, comptes par défaut)
+- ADD Sélecteur de journal pour les paiements de subventions (banque/trésorerie)
+- ADD Écriture comptable de paiement de subvention (Débit 512x / Crédit 441x) dans le journal de banque
+- ADD Boutons d'action pour comptabiliser et annuler l'engagement/le paiement sur les fiches
 - ADD Enregistrement des paiements avec sélection du compte bancaire Dolibarr et du mode de règlement
 - ADD Génération automatique des écritures bancaires (llx_bank) lors des encaissements
-- ADD Indicateurs d'état comptable sur les fiches et listes de subventions et financements
+- ADD Indicateurs d'état comptable sur les fiches et listes de subventions, financements et paiements
 - ADD Script de migration SQL 1.2.0-1.3.0 et auto-migration au chargement du module
 - ADD Traductions complètes (fr_FR, en_US)
 

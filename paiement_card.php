@@ -518,11 +518,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Confirmation of accounting engagement
 	if ($action == 'bookkeep') {
 		$default_bank_account = '512000';
+		$bank_journal = '';
 		if (!empty($object->fk_account)) {
 			require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
 			$acc_tmp = new Account($db);
-			if ($acc_tmp->fetch($object->fk_account) > 0 && !empty($acc_tmp->account_number)) {
-				$default_bank_account = $acc_tmp->account_number;
+			if ($acc_tmp->fetch($object->fk_account) > 0) {
+				if (!empty($acc_tmp->account_number)) {
+					$default_bank_account = $acc_tmp->account_number;
+				}
+				if (!empty($acc_tmp->fk_accountancy_journal)) {
+					$sqlj_acc = "SELECT code FROM ".MAIN_DB_PREFIX."accounting_journal WHERE rowid = ".((int) $acc_tmp->fk_accountancy_journal);
+					$resj_acc = $db->query($sqlj_acc);
+					if ($resj_acc && ($objj_acc = $db->fetch_object($resj_acc))) {
+						$bank_journal = $objj_acc->code;
+					}
+				}
 			}
 		}
 
@@ -554,9 +564,16 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			}
 		}
 		if (empty($TJournal)) {
-			$TJournal['OD'] = 'OD - '.$langs->trans("VariousOperations");
+			$TJournal['BQ'] = 'BQ - '.$langs->trans("FinanceJournal");
 		}
-		$default_journal = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL', 'OD');
+		$default_journal = !empty($bank_journal) ? $bank_journal : getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL_PAYMENT', 'BQ');
+		if (!array_key_exists($default_journal, $TJournal)) {
+			$default_journal = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL', 'OD');
+			if (!array_key_exists($default_journal, $TJournal) && !empty($TJournal)) {
+				$keys = array_keys($TJournal);
+				$default_journal = reset($keys);
+			}
+		}
 
 		$thirdparty = new Societe($db);
 		if ($object->fk_soc > 0) {
@@ -567,9 +584,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$formquestion = array(
 			array('type' => 'date', 'name' => 'date_engagement', 'label' => $langs->trans("EngagementDate"), 'value' => dol_now()),
 			array('type' => 'select', 'name' => 'journal', 'label' => $langs->trans("Journal"), 'values' => $TJournal, 'default' => $default_journal, 'morecss' => 'minwidth300'),
-			array('type' => 'text', 'name' => 'account_bank', 'label' => $langs->trans("SubventionBankAccount").' (Débit)', 'value' => $default_bank_account, 'morecss' => 'minwidth200'),
+			array('type' => 'text', 'name' => 'account_bank', 'label' => $langs->trans("SubventionBankAccount").' (Débit - Classe 5)', 'value' => $default_bank_account, 'morecss' => 'minwidth200'),
 			array('type' => 'text', 'name' => 'subledger_account', 'label' => $langs->trans("SubledgerAccount").' (Tiers)', 'value' => $default_subledger, 'morecss' => 'minwidth200'),
-			array('type' => 'text', 'name' => 'account_receivable', 'label' => $langs->trans("SubventionReceivableAccount").' (Crédit)', 'value' => $default_receivable, 'morecss' => 'minwidth200'),
+			array('type' => 'text', 'name' => 'account_receivable', 'label' => $langs->trans("SubventionReceivableAccount").' (Crédit - Classe 4)', 'value' => $default_receivable, 'morecss' => 'minwidth200'),
 			array('type' => 'text', 'name' => 'label_engagement', 'label' => $langs->trans("Label"), 'value' => $langs->trans("SubventionPayment").': '.$object->ref.' ('.$thirdparty->name.')', 'morecss' => 'centpercent minwidth400'),
 		);
 

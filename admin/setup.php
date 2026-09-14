@@ -179,20 +179,29 @@ $item->defaultFieldValue = '1';
 
 // Journals list
 $TJournal = array('' => '');
+$TJournalPayment = array('' => '');
 if (isModEnabled('accounting') || isModEnabled('accountancy')) {
-	$sql = "SELECT rowid, code, label FROM ".MAIN_DB_PREFIX."accounting_journal WHERE active = 1 ORDER BY label";
+	$sql = "SELECT rowid, code, label, nature FROM ".MAIN_DB_PREFIX."accounting_journal WHERE active = 1 ORDER BY label";
 	$resql = $db->query($sql);
 	if ($resql) {
 		while ($objj = $db->fetch_object($resql)) {
-			$TJournal[$objj->code] = $objj->code.' - '.$objj->label;
+			$label = $objj->code.' - '.$objj->label;
+			$TJournal[$objj->code] = $label;
+			$TJournalPayment[$objj->code] = $label;
 		}
 	}
 }
 if (empty($TJournal) || count($TJournal) <= 1) {
 	$TJournal['OD'] = 'OD - '.$langs->trans("VariousOperations");
 }
+if (empty($TJournalPayment) || count($TJournalPayment) <= 1) {
+	$TJournalPayment['BQ'] = 'BQ - '.$langs->trans("FinanceJournal");
+}
 $item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_JOURNAL')->setAsSelect($TJournal);
 $item->defaultFieldValue = 'OD';
+
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_JOURNAL_PAYMENT')->setAsSelect($TJournalPayment);
+$item->defaultFieldValue = 'BQ';
 
 $item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT');
 $item->defaultFieldValue = '441000';

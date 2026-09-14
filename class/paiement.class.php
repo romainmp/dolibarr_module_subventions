@@ -1200,7 +1200,7 @@ class Paiement extends CommonObject
 	 * @param  string $subledger_account   Subledger account code (tiers)
 	 * @return int                         >0 if OK, <0 if KO
 	 */
-	public function bookkeep($user, $date_engagement, $journal, $account_bank, $account_receivable, $label = '', $subledger_account = '')
+	public function bookkeep($user, $date_engagement, $journal = '', $account_bank = '', $account_receivable = '', $label = '', $subledger_account = '')
 	{
 		global $conf, $langs;
 
@@ -1234,6 +1234,54 @@ class Paiement extends CommonObject
 		$socid = $this->fk_soc > 0 ? $this->fk_soc : ($financement->fk_soc > 0 ? $financement->fk_soc : 0);
 		if ($socid > 0) {
 			$thirdparty->fetch($socid);
+		}
+
+		// Fallback for journal (prefer bank account's journal, then payment journal setting, then OD)
+		if (empty($journal)) {
+			$bank_journal = '';
+			if (!empty($this->fk_account)) {
+				require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+				$acc_tmp = new Account($this->db);
+				if ($acc_tmp->fetch($this->fk_account) > 0 && !empty($acc_tmp->fk_accountancy_journal)) {
+					$sqlj_acc = "SELECT code FROM ".MAIN_DB_PREFIX."accounting_journal WHERE rowid = ".((int) $acc_tmp->fk_accountancy_journal);
+					$resj_acc = $this->db->query($sqlj_acc);
+					if ($resj_acc && ($objj_acc = $this->db->fetch_object($resj_acc))) {
+						$bank_journal = $objj_acc->code;
+					}
+				}
+			}
+			$journal = !empty($bank_journal) ? $bank_journal : getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL_PAYMENT', 'BQ');
+			if (empty($journal)) {
+				$journal = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL', 'OD');
+			}
+		}
+
+		// Fallback for bank account (Class 5)
+		if (empty($account_bank)) {
+			if (!empty($this->fk_account)) {
+				require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+				$acc_tmp = new Account($this->db);
+				if ($acc_tmp->fetch($this->fk_account) > 0 && !empty($acc_tmp->account_number)) {
+					$account_bank = $acc_tmp->account_number;
+				}
+			}
+			if (empty($account_bank)) {
+				$account_bank = '512000';
+			}
+		}
+
+		// Fallback for receivable account (Class 4)
+		if (empty($account_receivable)) {
+			if ($financement->fk_financeur > 0) {
+				$sqlf = "SELECT accountancy_code_receivable, accountancy_code FROM ".MAIN_DB_PREFIX."c_subventions_financeur WHERE rowid = ".((int) $financement->fk_financeur);
+				$resf = $this->db->query($sqlf);
+				if ($resf && ($objf = $this->db->fetch_object($resf))) {
+					$account_receivable = !empty($objf->accountancy_code_receivable) ? $objf->accountancy_code_receivable : $objf->accountancy_code;
+				}
+			}
+			if (empty($account_receivable)) {
+				$account_receivable = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT', '441000');
+			}
 		}
 
 		$journal_label = 'Journal '.$journal;

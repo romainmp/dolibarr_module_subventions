@@ -254,6 +254,7 @@ class modSubventions extends DolibarrModules
 			3 => array('SUBVENTIONS_STATISTIC_DATE', 'chaine', '$date_creation', 'Date par défaut pour les statistiques', 1),
 			4 => array('SUBVENTIONS_STATISTIC_COLOR_GREEN', 'chaine', '75', 'Pourcentage minimum pour s\'afficher en vert', 1),
 			5 => array('SUBVENTIONS_STATISTIC_COLOR_ORANGE', 'chaine', '50', 'Pourcentage minimum pour s\'afficher en orange', 1),
+			6 => array('SUBVENTIONS_ACCOUNTANCY_JOURNAL_PAYMENT', 'chaine', 'BQ', 'Journal par défaut pour les paiements de subventions', 1),
 		);	
 
 		// Some keys to add into the overwriting translation tables

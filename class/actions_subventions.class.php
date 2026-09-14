@@ -208,8 +208,13 @@ class ActionsSubventions extends CommonHookActions
 			return 0;
 		}
 
-		// Only handle Various Journal (OD - nature 1)
-		if (!isset($object->nature) || $object->nature != 1) {
+		$journal_od = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL', 'OD');
+		$journal_payment = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL_PAYMENT', 'BQ');
+
+		$is_od_journal = (isset($object->nature) && $object->nature == 1) || ($object->code == $journal_od);
+		$is_payment_journal = (isset($object->nature) && $object->nature == 4) || ($object->code == $journal_payment);
+
+		if (!$is_od_journal && !$is_payment_journal) {
 			return 0;
 		}
 
@@ -237,7 +242,8 @@ class ActionsSubventions extends CommonHookActions
 		$this->db->query("UPDATE ".MAIN_DB_PREFIX."subventions_financement sf SET accounted = 0 WHERE accounted = 1 AND NOT EXISTS (SELECT 1 FROM ".MAIN_DB_PREFIX."accounting_bookkeeping ab WHERE ab.doc_type IN ('subvention', 'subvention_financement') AND ab.fk_doc = sf.rowid)");
 		$this->db->query("UPDATE ".MAIN_DB_PREFIX."subventions_paiement sp SET accounted = 0 WHERE accounted = 1 AND NOT EXISTS (SELECT 1 FROM ".MAIN_DB_PREFIX."accounting_bookkeeping ab WHERE ab.doc_type = 'subvention_paiement' AND ab.fk_doc = sp.rowid)");
 
-		// --- 1. Financements (Engagements) ---
+		// --- 1. Financements (Engagements - OD) ---
+		if ($is_od_journal) {
 		$sqlf = "SELECT f.rowid, f.ref, f.date_creation, f.date_engagement, f.montant_acc, f.fk_soc, f.fk_sub, f.fk_financeur, f.accounted";
 		$sqlf .= " FROM ".MAIN_DB_PREFIX."subventions_financement as f";
 		$sqlf .= " WHERE f.entity IN (".getEntity('financement@subventions').")";
@@ -390,8 +396,10 @@ class ActionsSubventions extends CommonHookActions
 				$parameters['data'][] = $element;
 			}
 		}
+		}
 
-		// --- 2. Paiements (Encaissements) ---
+		// --- 2. Paiements (Encaissements - Banque / Trésorerie) ---
+		if ($is_payment_journal) {
 		$sqlp = "SELECT p.rowid, p.ref, p.datep, p.date_engagement, p.montant, p.fk_soc, p.fk_sub, p.fk_fin, p.fk_account, p.accounted";
 		$sqlp .= " FROM ".MAIN_DB_PREFIX."subventions_paiement as p";
 		$sqlp .= " WHERE p.entity IN (".getEntity('paiement@subventions').")";
@@ -417,6 +425,26 @@ class ActionsSubventions extends CommonHookActions
 			$soc_static = new Societe($this->db);
 
 			while ($objp = $this->db->fetch_object($resqlp)) {
+				// Account bank / treasury (Debit) & check target journal
+				$account_bank = '512000';
+				$account_bank_journal = $journal_payment;
+				if (!empty($objp->fk_account)) {
+					$sqlacc = "SELECT ba.account_number, j.code as journal_code FROM ".MAIN_DB_PREFIX."bank_account ba LEFT JOIN ".MAIN_DB_PREFIX."accounting_journal j ON j.rowid = ba.fk_accountancy_journal WHERE ba.rowid = ".((int) $objp->fk_account);
+					$resacc = $this->db->query($sqlacc);
+					if ($resacc && ($objacc = $this->db->fetch_object($resacc))) {
+						if (!empty($objacc->account_number)) {
+							$account_bank = $objacc->account_number;
+						}
+						if (!empty($objacc->journal_code)) {
+							$account_bank_journal = $objacc->journal_code;
+						}
+					}
+				}
+
+				if (!empty($account_bank_journal) && $account_bank_journal != $journal) {
+					continue;
+				}
+
 				$pay_static->fetch((int) $objp->rowid);
 				$sub_static->fetch((int) $objp->fk_sub);
 				if ($objp->fk_fin > 0) {
@@ -429,18 +457,6 @@ class ActionsSubventions extends CommonHookActions
 
 				$docdate = !empty($objp->date_engagement) ? $this->db->jdate($objp->date_engagement) : $this->db->jdate($objp->datep);
 				$docdate_fmt = dol_print_date($docdate, 'day');
-
-				// Account bank / treasury (Debit)
-				$account_bank = '512000';
-				if (!empty($objp->fk_account)) {
-					$sqlacc = "SELECT account_number FROM ".MAIN_DB_PREFIX."bank_account WHERE rowid = ".((int) $objp->fk_account);
-					$resacc = $this->db->query($sqlacc);
-					if ($resacc && ($objacc = $this->db->fetch_object($resacc))) {
-						if (!empty($objacc->account_number)) {
-							$account_bank = $objacc->account_number;
-						}
-					}
-				}
 
 				// Account receivable (Credit)
 				$account_receivable = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT', '441000');
@@ -563,6 +579,7 @@ class ActionsSubventions extends CommonHookActions
 				$element['blocks'][] = $blocks;
 				$parameters['data'][] = $element;
 			}
+		}
 		}
 
 		return 0;
