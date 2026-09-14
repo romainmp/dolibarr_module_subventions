@@ -433,7 +433,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		$morehtmlref .= '<span>'.$object->label.'</span>';
 
 		// Thirdparty
-		$morehtmlref .= '<br>'.$object->thirdparty->getNomUrl(1, 'customer');
+		$morehtmlref .= '<br>'.$object->thirdparty->getNomUrl(1);
 		if (!getDolGlobalInt('MAIN_DISABLE_OTHER_LINK') && $object->thirdparty->id > 0) {
 			$url = dol_buildpath('/subventions/subvention_list.php', 1);
 			$url .= '?search_fk_soc='.$object->thirdparty->id;
@@ -449,7 +449,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				if ($action != 'classify') {
 					$morehtmlref .= '<a class="editfielda" href="'.$_SERVER['PHP_SELF'].'?action=classify&token='.newToken().'&id='.$object->id.'">'.img_edit($langs->transnoentitiesnoconv('SetProject')).'</a> ';
 				}
-				$morehtmlref .= $form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id, $object->socid, $object->fk_project, ($action == 'classify' ? 'projectid' : 'none'), 0, 0, 0, 1, '', 'maxwidth300');
+				$morehtmlref .= $form->form_project($_SERVER['PHP_SELF'].'?id='.$object->id, (!empty($object->socid) ? $object->socid : (!empty($object->fk_soc) ? $object->fk_soc : -1)), $object->fk_project, ($action == 'classify' ? 'projectid' : 'none'), 0, 0, 0, 1, '', 'maxwidth300');
 			} else {
 				if (!empty($object->fk_project)) {
 					$proj = new Project($db);

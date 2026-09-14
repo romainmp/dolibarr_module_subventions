@@ -93,7 +93,7 @@ class ActionsSubventions extends CommonHookActions
 				'datefieldname' => 'date_creation',
 				'margin' => 'add',
 				'project_field' => 'fk_project',
-				'url' => DOL_URL_ROOT.'/custom/subventions/subvention_list.php?fk_project='.$object->id, // URL pour lister les subventions
+				'url' => DOL_URL_ROOT.'/custom/subventions/subvention_list.php?search_fk_project='.$object->id, // URL pour lister les subventions
 				'urlnew' => DOL_URL_ROOT.'/custom/subventions/subvention_card.php?action=create&origin=project&originid='.$object->id.'&backtopage='.urlencode($_SERVER['PHP_SELF'].'?id='.$object->id),
 				'lang' => 'subventions',
 				'buttonnew' => $langs->trans('AddSubvention'),
