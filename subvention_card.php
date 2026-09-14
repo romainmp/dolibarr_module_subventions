@@ -1029,10 +1029,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				// Project selector — exclude already ventilated projects
 				$excludeProjectIds = array();
 				foreach ($ventilations as $v) {
-					$excludeProjectIds[] = $v->fk_project;
+					$excludeProjectIds[] = (int) $v->fk_project;
+				}
+				$morefilter = '';
+				if (!empty($excludeProjectIds)) {
+					$morefilter = ' AND t.rowid NOT IN ('.implode(',', $excludeProjectIds).')';
 				}
 				print '<td>';
-				$formproject->select_projects(-1, '', 'ventil_projectid', 0, 0, 1, 1, 0, 0, 0, '', 1, 0, 'maxwidth300', '', '', implode(',', $excludeProjectIds));
+				$formproject->select_projects(-1, '', 'ventil_projectid', 0, 0, 1, 1, 0, 0, 0, '', 0, 0, 'maxwidth300', '', $morefilter);
 				print '</td>';
 				// Amount
 				$defaultAmount = ($remaining > 0) ? $remaining : '';
