@@ -1031,12 +1031,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				foreach ($ventilations as $v) {
 					$excludeProjectIds[] = (int) $v->fk_project;
 				}
-				$morefilter = '';
-				if (!empty($excludeProjectIds)) {
-					$morefilter = ' AND t.rowid NOT IN ('.implode(',', $excludeProjectIds).')';
-				}
 				print '<td>';
-				$formproject->select_projects(-1, '', 'ventil_projectid', 0, 0, 1, 1, 0, 0, 0, '', 0, 0, 'maxwidth300', '', $morefilter);
+				// Get projects as array (mode=1) to filter in PHP (morefilter is sanitized by Dolibarr and breaks SQL)
+				$projectOptions = $formproject->select_projects(-1, '', 'ventil_projectid', 0, 0, 1, 1, 0, 0, 1, '', 1, 0, 'maxwidth300');
+				print '<select class="flat maxwidth300" name="ventil_projectid" id="ventil_projectid">';
+				print '<option value="0">&nbsp;</option>';
+				if (is_array($projectOptions)) {
+					foreach ($projectOptions as $optionData) {
+						if (in_array($optionData['key'], $excludeProjectIds)) {
+							continue; // Skip already ventilated projects
+						}
+						$disabledAttr = !empty($optionData['disabled']) ? ' disabled' : '';
+						print '<option value="'.$optionData['key'].'"'.$disabledAttr.'>'.dol_escape_htmltag($optionData['label']).'</option>';
+					}
+				}
+				print '</select>';
 				print '</td>';
 				// Amount
 				$defaultAmount = ($remaining > 0) ? $remaining : '';
