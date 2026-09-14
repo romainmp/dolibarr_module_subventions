@@ -157,3 +157,21 @@ SubsidysSetup=Paramétrage subventions
 BackToSub=Retour à la subvention
 XXX=
 bytes=octets
+
+#
+# Project ventilation (multi-projects)
+#
+ProjectVentilation=Ventilation projets
+AddProjectVentilation=Ajouter une ventilation
+AllocatedAmount=Montant ventilé
+AllocatedPercentage=Pourcentage
+TotalVentilated=Total ventilé
+RemainingToAllocate=Reste à ventiler
+VentilationExceedsTotal=Le total ventilé dépasse le montant accordé
+VentilationIncomplete=La ventilation est incomplète
+ConfirmDeleteVentilation=Êtes-vous sûr de vouloir supprimer cette ventilation ?
+SubventionsAllocated=Subventions (ventilées)
+ListSubventionsAllocatedProject=Liste des subventions ventilées sur ce projet
+ProjectAlreadyAllocated=Ce projet est déjà ventilé pour cette subvention
+VentilationOf=Ventilation de
+NoProjectVentilation=Aucune ventilation projet

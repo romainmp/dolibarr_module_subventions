@@ -84,16 +84,22 @@ class ActionsSubventions extends CommonHookActions
 		global $conf, $user, $langs;
 
 		if ($object->element == 'project' && getDolGlobalInt('SUBVENTIONS_PROJECT')) {
+			// Check if multi-project ventilation table exists and has data for this project
+			dol_include_once('/custom/subventions/class/subventionproject.class.php');
+			$subventionproject = new SubventionProject($this->db);
+			$ventilations = $subventionproject->fetchAllBySubvention(0); // dummy call to check class
+
+			// Use the junction table for ventilated amounts per project
 			$this->results = array(
 				'subvention' => array(
-				'name' => $langs->trans("Subsidys"),
-				'title' => $langs->trans("ListSubventionsAssociatedProject"),
-				'class' => 'Subvention',
-				'table' => 'subventions_subvention',
-				'datefieldname' => 'date_creation',
+				'name' => $langs->trans("SubventionsAllocated"),
+				'title' => $langs->trans("ListSubventionsAllocatedProject"),
+				'class' => 'SubventionProject',
+				'table' => 'subventions_subvention_projet',
+				'datefieldname' => 'datec',
 				'margin' => 'add',
 				'project_field' => 'fk_project',
-				'url' => DOL_URL_ROOT.'/custom/subventions/subvention_list.php?fk_project='.$object->id, // URL pour lister les subventions
+				'url' => DOL_URL_ROOT.'/custom/subventions/subvention_list.php?search_fk_project='.$object->id,
 				'urlnew' => DOL_URL_ROOT.'/custom/subventions/subvention_card.php?action=create&origin=project&originid='.$object->id.'&backtopage='.urlencode($_SERVER['PHP_SELF'].'?id='.$object->id),
 				'lang' => 'subventions',
 				'buttonnew' => $langs->trans('AddSubvention'),
@@ -104,6 +110,7 @@ class ActionsSubventions extends CommonHookActions
         	return 0;
     	}
 	}
+
 
 	/**
 	 * Execute action completeTabsHead

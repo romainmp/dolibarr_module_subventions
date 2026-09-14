@@ -145,3 +145,21 @@ SubsidysSetup=Grants configuration
 BackToSub=Back to subsidy
 XXX=
 bytes=bytes
+
+#
+# Project ventilation (multi-projects)
+#
+ProjectVentilation=Project allocation
+AddProjectVentilation=Add allocation
+AllocatedAmount=Allocated amount
+AllocatedPercentage=Percentage
+TotalVentilated=Total allocated
+RemainingToAllocate=Remaining to allocate
+VentilationExceedsTotal=Allocated total exceeds accepted amount
+VentilationIncomplete=Allocation is incomplete
+ConfirmDeleteVentilation=Are you sure you want to delete this allocation?
+SubventionsAllocated=Grants (allocated)
+ListSubventionsAllocatedProject=List of grants allocated to this project
+ProjectAlreadyAllocated=This project is already allocated for this grant
+VentilationOf=Allocation of
+NoProjectVentilation=No project allocation

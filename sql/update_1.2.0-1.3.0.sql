@@ -1,0 +1,37 @@
+-- Copyright (C) 2026		Romain MP		<romain.mp@gmail.com>
+--
+-- This program is free software: you can redistribute it and/or modify
+-- it under the terms of the GNU General Public License as published by
+-- the Free Software Foundation, either version 3 of the License, or
+-- (at your option) any later version.
+--
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+--
+-- You should have received a copy of the GNU General Public License
+-- along with this program.  If not, see https://www.gnu.org/licenses/.
+
+
+-- Create multi-project allocation table
+CREATE TABLE IF NOT EXISTS llx_subventions_subvention_projet(
+	rowid integer AUTO_INCREMENT PRIMARY KEY NOT NULL,
+	fk_subvention integer NOT NULL,
+	fk_project integer NOT NULL,
+	amount double(24,8) NOT NULL DEFAULT 0,
+	note text,
+	datec datetime NOT NULL,
+	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+	fk_user_creat integer NOT NULL,
+	fk_user_modif integer
+) ENGINE=innodb;
+
+ALTER TABLE llx_subventions_subvention_projet ADD UNIQUE INDEX uk_subventions_sub_proj (fk_subvention, fk_project);
+ALTER TABLE llx_subventions_subvention_projet ADD INDEX idx_subventions_sub_proj_fk_project (fk_project);
+
+-- Migrate existing single-project links to the junction table
+INSERT IGNORE INTO llx_subventions_subvention_projet (fk_subvention, fk_project, amount, datec, fk_user_creat)
+SELECT rowid, fk_project, COALESCE(montant_acc, 0), NOW(), fk_user_creat
+FROM llx_subventions_subvention
+WHERE fk_project IS NOT NULL AND fk_project > 0;
