@@ -1032,9 +1032,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 					$excludeProjectIds[] = (int) $v->fk_project;
 				}
 				print '<td>';
-				// Get projects as array (mode=1) to filter in PHP (morefilter is sanitized by Dolibarr and breaks SQL)
-				$projectOptions = $formproject->select_projects(-1, '', 'ventil_projectid', 0, 0, 1, 1, 0, 0, 1, '', 1, 0, 'maxwidth300');
-				print '<select class="flat maxwidth300" name="ventil_projectid" id="ventil_projectid">';
+				// Get projects list as array (mode=1) to filter out already-ventilated projects in PHP
+				$projectOptions = $formproject->select_projects_list(-1, 0, 'ventil_projectid', 64, 0, 1, 1, 0, 0, 1);
+				print '<select class="flat minwidth200" name="ventil_projectid" id="ventil_projectid">';
 				print '<option value="0">&nbsp;</option>';
 				if (is_array($projectOptions)) {
 					foreach ($projectOptions as $optionData) {
@@ -1042,10 +1042,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 							continue; // Skip already ventilated projects
 						}
 						$disabledAttr = !empty($optionData['disabled']) ? ' disabled' : '';
-						print '<option value="'.$optionData['key'].'"'.$disabledAttr.'>'.dol_escape_htmltag($optionData['label']).'</option>';
+						print '<option value="'.$optionData['key'].'"'.$disabledAttr.'>'.dol_escape_htmltag($optionData['labelx']).'</option>';
 					}
 				}
 				print '</select>';
+				if (!empty($conf->use_javascript_ajax)) {
+					include_once DOL_DOCUMENT_ROOT . '/core/lib/ajax.lib.php';
+					print ajax_combobox('ventil_projectid');
+				}
 				print '</td>';
 				// Amount
 				$defaultAmount = ($remaining > 0) ? $remaining : '';

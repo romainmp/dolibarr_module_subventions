@@ -24,14 +24,18 @@ CREATE TABLE IF NOT EXISTS llx_subventions_subvention_projet(
 	datec datetime NOT NULL,
 	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	fk_user_creat integer NOT NULL,
-	fk_user_modif integer
+	fk_user_modif integer,
+	entity integer DEFAULT 1 NOT NULL
 ) ENGINE=innodb;
 
 ALTER TABLE llx_subventions_subvention_projet ADD UNIQUE INDEX uk_subventions_sub_proj (fk_subvention, fk_project);
 ALTER TABLE llx_subventions_subvention_projet ADD INDEX idx_subventions_sub_proj_fk_project (fk_project);
 
+-- Add entity column if table already exists without it
+ALTER TABLE llx_subventions_subvention_projet ADD COLUMN entity integer DEFAULT 1 NOT NULL;
+
 -- Migrate existing single-project links to the junction table
-INSERT IGNORE INTO llx_subventions_subvention_projet (fk_subvention, fk_project, amount, datec, fk_user_creat)
-SELECT rowid, fk_project, COALESCE(montant_acc, 0), NOW(), fk_user_creat
+INSERT IGNORE INTO llx_subventions_subvention_projet (fk_subvention, fk_project, amount, datec, fk_user_creat, entity)
+SELECT rowid, fk_project, COALESCE(montant_acc, 0), NOW(), fk_user_creat, entity
 FROM llx_subventions_subvention
 WHERE fk_project IS NOT NULL AND fk_project > 0;

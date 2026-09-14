@@ -94,6 +94,26 @@ class SubventionProject extends CommonObject
 	public $fk_user_creat;
 
 	/**
+	 * @var int Entity ID
+	 */
+	public $entity = 1;
+
+	/**
+	 * @var string Reference (subvention ref, for element.php)
+	 */
+	public $ref;
+
+	/**
+	 * @var int Status (subvention status, for element.php)
+	 */
+	public $status;
+
+	/**
+	 * @var Societe Third party (for element.php)
+	 */
+	public $thirdparty;
+
+	/**
 	 * @var int User who modified
 	 */
 	public $fk_user_modif;
@@ -118,6 +138,8 @@ class SubventionProject extends CommonObject
 	 */
 	public function create(User $user, $notrigger = 0)
 	{
+		global $conf;
+
 		$error = 0;
 
 		// Validation
@@ -130,10 +152,12 @@ class SubventionProject extends CommonObject
 			return -1;
 		}
 
+		$entity = !empty($this->entity) ? (int) $this->entity : (int) $conf->entity;
+
 		$this->db->begin();
 
 		$sql = "INSERT INTO ".MAIN_DB_PREFIX.$this->table_element." (";
-		$sql .= "fk_subvention, fk_project, amount, note, datec, fk_user_creat";
+		$sql .= "fk_subvention, fk_project, amount, note, datec, fk_user_creat, entity";
 		$sql .= ") VALUES (";
 		$sql .= " ".((int) $this->fk_subvention);
 		$sql .= ", ".((int) $this->fk_project);
@@ -141,6 +165,7 @@ class SubventionProject extends CommonObject
 		$sql .= ", ".(!empty($this->note) ? "'".$this->db->escape($this->note)."'" : "NULL");
 		$sql .= ", '".$this->db->idate(dol_now())."'";
 		$sql .= ", ".((int) $user->id);
+		$sql .= ", ".((int) $entity);
 		$sql .= ")";
 
 		dol_syslog(get_class($this)."::create", LOG_DEBUG);
@@ -150,6 +175,7 @@ class SubventionProject extends CommonObject
 			$this->id = $this->db->last_insert_id(MAIN_DB_PREFIX.$this->table_element);
 			$this->datec = dol_now();
 			$this->fk_user_creat = $user->id;
+			$this->entity = $entity;
 
 			// Sync total_ht/total_ttc
 			$this->total_ht = $this->amount;
@@ -177,9 +203,11 @@ class SubventionProject extends CommonObject
 	 */
 	public function fetch($id)
 	{
-		$sql = "SELECT rowid, fk_subvention, fk_project, amount, note, datec, tms, fk_user_creat, fk_user_modif";
-		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element;
-		$sql .= " WHERE rowid = ".((int) $id);
+		$sql = "SELECT sp.rowid, sp.fk_subvention, sp.fk_project, sp.amount, sp.note, sp.datec, sp.tms, sp.fk_user_creat, sp.fk_user_modif, sp.entity,";
+		$sql .= " s.ref as subvention_ref, s.fk_soc, s.status as subvention_status";
+		$sql .= " FROM ".MAIN_DB_PREFIX.$this->table_element." as sp";
+		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."subventions_subvention as s ON s.rowid = sp.fk_subvention";
+		$sql .= " WHERE sp.rowid = ".((int) $id);
 
 		dol_syslog(get_class($this)."::fetch", LOG_DEBUG);
 		$resql = $this->db->query($sql);
@@ -199,6 +227,15 @@ class SubventionProject extends CommonObject
 				$this->tms = $this->db->jdate($obj->tms);
 				$this->fk_user_creat = $obj->fk_user_creat;
 				$this->fk_user_modif = $obj->fk_user_modif;
+				$this->entity = $obj->entity;
+				$this->ref = $obj->subvention_ref;
+				$this->status = $obj->subvention_status;
+
+				if (!empty($obj->fk_soc)) {
+					require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+					$this->thirdparty = new Societe($this->db);
+					$this->thirdparty->fetch($obj->fk_soc);
+				}
 
 				$this->db->free($resql);
 				return 1;

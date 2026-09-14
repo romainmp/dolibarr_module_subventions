@@ -23,5 +23,6 @@ CREATE TABLE llx_subventions_subvention_projet(
 	datec datetime NOT NULL,
 	tms timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 	fk_user_creat integer NOT NULL,
-	fk_user_modif integer
+	fk_user_modif integer,
+	entity integer DEFAULT 1 NOT NULL
 ) ENGINE=innodb;
