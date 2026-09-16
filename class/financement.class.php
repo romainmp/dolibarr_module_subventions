@@ -298,8 +298,8 @@ class Financement extends CommonObject
 		$resultcreate = $this->createCommon($user, $notrigger);
 
 		// uncomment lines below if you want to validate object after creation
-		$this->fetch($this->id); // needed to retrieve some fields (ie date_creation for masked ref)
-		$resultvalidate = $this->validate($user, $notrigger);
+		//$this->fetch($this->id); // needed to retrieve some fields (ie date_creation for masked ref)
+		//$resultvalidate = $this->validate($user, $notrigger);
 
 		// Mise à jour des montants des financements liés
 		$resultmaj = majMontantsFinancementSubvention($this);
