@@ -1,16 +1,17 @@
 # CHANGELOG MODULE SUBVENTIONS POUR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 ## 1.3
-- ADD Intégration comptable complète : engagement (OD) par financeur dans le Grand Livre (Débit 441x / Crédit 74xx)
-- ADD Prise en charge des comptes de créance (441x) dans le dictionnaire des financeurs
+- ADD Intégration comptable complète : passage par le journal de transfert comptable (accountancy_transfer_journal) selon les journaux par défaut configurés
+- ADD Prise en charge des comptes de créance (441x) et produits (74xx) dans le dictionnaire des financeurs
 - ADD Paramétrage de la comptabilité avancée (activation, journal OD, journal de paiement/banque, comptes par défaut)
 - ADD Sélecteur de journal pour les paiements de subventions (banque/trésorerie)
 - ADD Écriture comptable de paiement de subvention (Débit 512x / Crédit 441x) dans le journal de banque
-- ADD Boutons d'action pour comptabiliser et annuler l'engagement/le paiement sur les fiches
+- ADD Liens et boutons d'action vers le journal de transfert comptable et le Grand Livre sur les fiches et listes
 - ADD Enregistrement des paiements avec sélection du compte bancaire Dolibarr et du mode de règlement
 - ADD Génération automatique des écritures bancaires (llx_bank) lors des encaissements
-- ADD Indicateurs d'état comptable sur les fiches et listes de subventions, financements et paiements
+- ADD Indicateurs d'état comptable synchronisés avec le Grand Livre sur les fiches et listes
 - ADD Script de migration SQL 1.2.0-1.3.0 et auto-migration au chargement du module
 - ADD Traductions complètes (fr_FR, en_US)
+- FIX Correction de l'erreur fatale de redéclaration de subventionsAdminPrepareHead() sur les onglets d'administration
 
 ## 1.2 Merci @romainmp
 - FIX #26 Traductions manquantes

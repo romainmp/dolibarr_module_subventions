@@ -32,8 +32,9 @@ ini_set('display_errors', 1);
 
 // Put here all includes required by your class file
 require_once DOL_DOCUMENT_ROOT.'/core/class/commonobject.class.php';
-dol_include_once('/custom/subventions/lib/subventions.lib.php');
+dol_include_once('/subventions/lib/subventions.lib.php');
 
+if (!class_exists('Paiement')) {
 /**
  * Class for Paiement
  */
@@ -1458,3 +1459,5 @@ class PaiementLine extends CommonObjectLine
 		$this->isextrafieldmanaged = 0;
 	}
 }
+}
+
