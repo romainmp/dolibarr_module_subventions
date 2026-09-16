@@ -1,5 +1,12 @@
 # CHANGELOG MODULE SUBVENTIONS POUR [DOLIBARR ERP CRM](https://www.dolibarr.org)
 ## 1.3
+- ADD Refonte des statuts des financements : Brouillon (0), Déposé (1), Accordé (2), Refusé (3)
+- ADD Dialogue de confirmation lors du passage à Accordé (saisie de la date d'engagement et du montant accordé)
+- ADD Dialogue de confirmation lors du passage à Refusé (saisie de la date de notification)
+- ADD Éligibilité directe des financements accordés dans le journal de transfert des OD
+- ADD Masquage des champs « Comptabilisé » et « Date d'engagement » lors de la création d'un financement ou paiement
+- ADD Nouveaux boutons de transition de statut (Déposer, Accorder, Refuser, Rouvrir / Remettre en déposé)
+- DEL Suppression des fonctions et boutons d'annulation de comptabilisation (unbookkeep)
 - ADD Intégration comptable complète : passage par le journal de transfert comptable (accountancy_transfer_journal) selon les journaux par défaut configurés
 - ADD Prise en charge des comptes de créance (441x) et produits (74xx) dans le dictionnaire des financeurs
 - ADD Paramétrage de la comptabilité avancée (activation, journal OD, journal de paiement/banque, comptes par défaut)

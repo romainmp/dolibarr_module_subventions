@@ -255,25 +255,6 @@ if (empty($reshook)) {
 			syncSubventionsAccountedStatus('paiement', $object);
 		}
 	}
-
-	// Redirect direct bookkeep action to transfer journal
-	if ($action == 'bookkeep') {
-		$url_transfer = function_exists('getSubventionsTransferJournalUrl') ? getSubventionsTransferJournalUrl('paiement', $object) : DOL_URL_ROOT.'/accountancy/journal/variousjournal.php?mainmenu=accountancy&leftmenu=accountancy_transfer_journal';
-		header('Location: '.$url_transfer);
-		exit;
-	}
-
-	if ($action == 'confirm_unbookkeep' && $confirm == 'yes' && $permissiontoadd) {
-		$res = $object->unbookkeep($user);
-		if ($res > 0) {
-			setEventMessages($langs->trans("SubventionUnbookkeptSuccess"), null, 'mesgs');
-			header('Location: '.$_SERVER["PHP_SELF"].'?id='.$object->id);
-			exit;
-		} else {
-			setEventMessages($object->error, $object->errors, 'errors');
-			$action = '';
-		}
-	}
 }
 
 
@@ -412,6 +393,8 @@ if ($action == 'create') {
 
 	print '<table class="border centpercent tableforfieldcreate">'."\n";
 
+	unset($object->fields['accounted']);
+
 	// Common attributes
 	include DOL_DOCUMENT_ROOT.'/core/tpl/commonfields_add.tpl.php';
 
@@ -507,10 +490,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 
 
-	if ($action == 'unbookkeep') {
-		$text = $langs->trans("ConfirmUnbookkeepPayment");
-		$formconfirm = $form->formconfirm($_SERVER["PHP_SELF"].'?id='.$object->id, $langs->trans("UnbookkeepPayment"), $text, 'confirm_unbookkeep', array(), 'yes', 1, 'auto', 550);
-	}
+
 
 	// Call Hook formConfirm
 	$parameters = array('formConfirm' => $formconfirm, 'lineid' => $lineid);
@@ -665,20 +645,21 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				if (empty($object->accounted) && !empty($object->montant) && $object->montant > 0) {
 					print dolGetButtonAction('', $langs->trans('AccountancyTransferJournal'), 'default', $url_transfer, '', $permissiontoadd);
 				} elseif (!empty($object->accounted)) {
-					print dolGetButtonAction('', $langs->trans('UnbookkeepInLedger'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=unbookkeep&token='.newToken(), '', $permissiontoadd);
 					print dolGetButtonAction('', $langs->trans('ViewInLedger'), 'default', DOL_URL_ROOT.'/accountancy/bookkeeping/list.php?search_doc_ref='.urlencode($object->ref), '', 1);
 				}
 			}
 
-			// Delete (with preloaded confirm popup)
-			$deleteUrl = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=delete&token='.newToken();
-			$buttonId = 'action-delete-no-ajax';
-			if ($conf->use_javascript_ajax && empty($conf->dol_use_jmobile)) {	// We can use preloaded confirm if not jmobile
-				$deleteUrl = '';
-				$buttonId = 'action-delete';
+			// Delete (with preloaded confirm popup - disabled if accounted)
+			if (empty($object->accounted)) {
+				$deleteUrl = $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=delete&token='.newToken();
+				$buttonId = 'action-delete-no-ajax';
+				if ($conf->use_javascript_ajax && empty($conf->dol_use_jmobile)) {	// We can use preloaded confirm if not jmobile
+					$deleteUrl = '';
+					$buttonId = 'action-delete';
+				}
+				$params = array();
+				print dolGetButtonAction('', $langs->trans("Delete"), 'delete', $deleteUrl, $buttonId, $permissiontodelete, $params);
 			}
-			$params = array();
-			print dolGetButtonAction('', $langs->trans("Delete"), 'delete', $deleteUrl, $buttonId, $permissiontodelete, $params);
 		}
 		print '</div>'."\n";
 	}	

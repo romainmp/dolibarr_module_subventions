@@ -248,7 +248,7 @@ class ActionsSubventions extends CommonHookActions
 		$sqlf = "SELECT f.rowid, f.ref, f.date_creation, f.date_engagement, f.montant_acc, f.fk_soc, f.fk_sub, f.fk_financeur, f.accounted";
 		$sqlf .= " FROM ".MAIN_DB_PREFIX."subventions_financement as f";
 		$sqlf .= " WHERE f.entity IN (".getEntity('financement@subventions').")";
-		$sqlf .= " AND f.status > 0 AND f.montant_acc > 0";
+		$sqlf .= " AND f.status = 2 AND f.montant_acc > 0";
 		if ($date_start && $date_end) {
 			$sqlf .= " AND (";
 			$sqlf .= "   (f.date_engagement IS NOT NULL AND f.date_engagement >= '".$this->db->idate($date_start)."' AND f.date_engagement <= '".$this->db->idate($date_end)."')";
