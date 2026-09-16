@@ -608,6 +608,8 @@ class Financement extends CommonObject
 
 		if (!$error) {
 			$this->db->commit();
+			majMontantsFinancementSubvention($this);
+			majstatut($this);
 			return 1;
 		} else {
 			$this->db->rollback();

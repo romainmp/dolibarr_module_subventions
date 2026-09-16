@@ -687,7 +687,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		if (empty($reshook)) {
 			// Status 0: Brouillon -> Déposer
 			if ($object->status == Financement::STATUS_DRAFT && $permissiontoadd) {
-				print dolGetButtonAction('', $langs->trans('DeposeFinancement'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=validate&token='.newToken(), '', $permissiontoadd);
+				print dolGetButtonAction('', $langs->trans('DeposeFinancement'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_validate&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			}
 
 			// Status 1: Déposé -> Accorder, Refuser, Remettre en brouillon
