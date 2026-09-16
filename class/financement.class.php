@@ -637,7 +637,12 @@ class Financement extends CommonObject
 		 return -1;
 		 }*/
 
-		return $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'SUBVENTIONS_FINANCEMENT_UNVALIDATE');
+		$result = $this->setStatusCommon($user, self::STATUS_DRAFT, $notrigger, 'SUBVENTIONS_FINANCEMENT_UNVALIDATE');
+		if ($result > 0) {
+			majMontantsFinancementSubvention($this);
+			majstatut($this);
+		}
+		return $result;
 	}
 
 	/**

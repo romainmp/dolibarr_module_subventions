@@ -694,7 +694,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 			if ($object->status == Financement::STATUS_DEPOSITED && $permissiontoadd) {
 				print dolGetButtonAction('', $langs->trans('GrantFinancement'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=accept&token='.newToken(), '', $permissiontoadd);
 				print dolGetButtonAction('', $langs->trans('RefuseFinancement'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=refuse&token='.newToken(), '', $permissiontoadd);
-				print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=setdraft&token='.newToken(), '', $permissiontoadd);
+				print dolGetButtonAction('', $langs->trans('SetToDraft'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=confirm_setdraft&confirm=yes&token='.newToken(), '', $permissiontoadd);
 			}
 
 			// Status 2 (Accordé) ou 3 (Refusé): Rouvrir / Remettre en déposé
