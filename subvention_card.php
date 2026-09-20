@@ -2,6 +2,7 @@
 /* Copyright (C) 2017       Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2024       Frédéric France         <frederic.france@free.fr>
  * Copyright (C) 2025		François Brichart		<francois@disqutons.fr>
+ * Copyright (C) 2026		Romain MP		<romain.mp@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -648,7 +649,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		// Création de l'URL nécessaire au bouton
         $url = dol_buildpath('/subventions/financement_card.php', 1);
-        $url .= '?action=create&origin=subvention&fk_sub='.urlencode($id).'&token='.newToken();
+        $url .= '?action=create&origin=subvention&fk_sub='.urlencode($id).'&backtopage='.urlencode($_SERVER['PHP_SELF'].'?id='.$id).'&token='.newToken();
         
 		// Liste des financeurs
 		print'<table class="notopnoleftnoright table-fiche-title showlinkedobjectblock">
@@ -684,9 +685,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 						print '<td style="width: 150" class="right">'.$langs->trans("Financed").'</td>';
 						print '<td style="width: 150" class="right">'.$langs->trans("Pending").'</td>';
 						print '<td style="width: 150" class="right">'.$langs->trans("Refused").'</td>';
+						if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+							print '<td style="width: 120" class="center">'.$langs->trans("Accounted").'</td>';
+						}
 					print '</tr>';
 
-		$sql = "SELECT f.rowid, f.ref, f.fk_soc, f.montant_dem, f.montant_acc, f.montant_fin, f.montant_att, f.montant_ref, fk_sub, s.nom, s.rowid as sref";
+		$sql = "SELECT f.rowid, f.ref, f.fk_soc, f.montant_dem, f.montant_acc, f.montant_fin, f.montant_att, f.montant_ref, f.accounted, f.date_engagement, fk_sub, s.nom, s.rowid as sref";
 		$sql .= " FROM ".MAIN_DB_PREFIX."subventions_financement as f";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on f.fk_soc = s.rowid";
 		$sql .= " WHERE f.fk_sub = ".$id;
@@ -714,6 +718,14 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
         		print '<td class="right"><span class="amount">'.$obj->montant_fin.'</span></td>';
         		print '<td class="right"><span class="amount">'.$obj->montant_att.'</span></td>';
         		print '<td class="right"><span class="amount">'.$obj->montant_ref.'</span></td>';
+				if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+					if (!empty($obj->accounted)) {
+						$ledgerurl = DOL_URL_ROOT.'/accountancy/bookkeeping/list.php?search_doc_ref='.urlencode($obj->ref);
+						print '<td class="center"><a href="'.$ledgerurl.'" title="'.$langs->trans("ViewInLedger").'"><span class="badge badge-status4 badge-status" title="'.dol_print_date($obj->date_engagement, 'day').'"><i class="fa fa-check"></i> '.$langs->trans("Accounted").'</span></a></td>';
+					} else {
+						print '<td class="center"><span class="badge badge-status0 badge-status">'.$langs->trans("NotAccounted").'</span></td>';
+					}
+				}
 				print '</tr>';
 				$i++;
 				$totalfinancement = $i;
@@ -730,6 +742,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		print '<td class="right"><span class="amount">'.$object->montant_fin.'</span></td>';
 		print '<td class="right"><span class="amount">'.$object->montant_att.'</span></td>';
 		print '<td class="right"><span class="amount">'.$object->montant_ref.'</span></td>';
+		if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+			print '<td></td>';
+		}
 		print '</tr>';
 		print '</tbody>
 			</table>
@@ -737,7 +752,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 
 		// Création de l'URL nécessaire au bouton
         $url = dol_buildpath('/subventions/paiement_card.php', 1);
-        $url .= '?action=create&origin=subvention&fk_sub='.urlencode($id).'&token='.newToken();
+        $url .= '?action=create&origin=subvention&fk_sub='.urlencode($id).'&backtopage='.urlencode($_SERVER['PHP_SELF'].'?id='.$id).'&token='.newToken();
 
 		// Liste des paiements associés à la subvention
 		print'<table class="notopnoleftnoright table-fiche-title showlinkedobjectblock">
@@ -769,11 +784,17 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 						print '<td style="width: 200">'.$langs->trans("ReferencePayment").'</td>';
 						//print '<td style="width: 200" class="center">'.$langs->trans("Funding").'</td>';
 						print '<td style="width: 300">'.$langs->trans("FundingSource").'</td>';
+						if (isModEnabled('banque')) {
+							print '<td style="width: 150" class="left">'.$langs->trans("BankAccount").'</td>';
+						}
 						print '<td style="width: 150" class="center">'.$langs->trans("Date").'</td>';
-						print '<td style="width: 150" class="right">'.$langs->trans("Amount").'</td>';						
+						print '<td style="width: 150" class="right">'.$langs->trans("Amount").'</td>';
+						if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+							print '<td style="width: 120" class="center">'.$langs->trans("Accounted").'</td>';
+						}
 					print '</tr>';
 
-		$sql = "SELECT p.rowid, p.ref, p.fk_soc, p.montant, p.datep, p.fk_sub, p.fk_fin, s.nom, s.rowid as sref";
+		$sql = "SELECT p.rowid, p.ref, p.fk_soc, p.montant, p.datep, p.fk_sub, p.fk_fin, p.fk_bank, p.fk_account, p.accounted, p.date_engagement, s.nom, s.rowid as sref";
 		$sql .= " FROM ".MAIN_DB_PREFIX."subventions_paiement as p";
 		$sql .= " LEFT JOIN ".MAIN_DB_PREFIX."societe as s on p.fk_soc = s.rowid";
 		$sql .= " WHERE p.fk_sub = ".$id;
@@ -801,8 +822,27 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				print '<td>'.$paiement->getNomUrl(1, '', 0, '', -1, '&sub='.$object->id).'</td>';
 				//print '<td class="center">'.$financement->getNomUrl(1).'</td>';
 				print '<td>'.$societe->getNomUrl(1).'</td>';
+				if (isModEnabled('banque')) {
+					print '<td class="left">';
+					if (!empty($obj->fk_account)) {
+						require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+						$acc_static = new Account($db);
+						if ($acc_static->fetch($obj->fk_account) > 0) {
+							print $acc_static->getNomUrl(1);
+						}
+					}
+					print '</td>';
+				}
 				print '<td class="center"><span class="amount">'.$obj->datep.'</td>';
         		print '<td class="right"><span class="amount">'.$obj->montant.'</span></td>';
+				if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+					if (!empty($obj->accounted)) {
+						$ledgerurl = DOL_URL_ROOT.'/accountancy/bookkeeping/list.php?search_doc_ref='.urlencode($obj->ref);
+						print '<td class="center"><a href="'.$ledgerurl.'" title="'.$langs->trans("ViewInLedger").'"><span class="badge badge-status4 badge-status" title="'.dol_print_date($obj->date_engagement, 'day').'"><i class="fa fa-check"></i> '.$langs->trans("Accounted").'</span></a></td>';
+					} else {
+						print '<td class="center"><span class="badge badge-status0 badge-status">'.$langs->trans("NotAccounted").'</span></td>';
+					}
+				}
 				print '</tr>';
 				$i++;
 			}
@@ -810,9 +850,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 		// Ajout de la ligne total :
 		print '<tr class="liste_total">';
 		print '<td></td>';
-		print '<td colspan="2">Nombre : '.$i.'</td>';
+		print '<td colspan="'.(isModEnabled('banque') ? '3' : '2').'">Nombre : '.$i.'</td>';
 		print '<td class="right">Total : </td>';
 		print '<td class="right">'.$object->montant_fin.'</td>';
+		if (getDolGlobalInt('SUBVENTIONS_ACCOUNTANCY_ENABLED') && (isModEnabled('accounting') || isModEnabled('accountancy'))) {
+			print '<td></td>';
+		}
 		print '</tr>';
 		print '</tbody>
 			</table>

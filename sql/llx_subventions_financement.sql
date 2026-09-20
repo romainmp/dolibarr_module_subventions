@@ -1,4 +1,5 @@
 -- Copyright (C) 2025		François Brichart			<francois@disqutons.fr>
+-- Copyright (C) 2026		Romain MP		<romain.mp@gmail.com>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -36,6 +37,10 @@ CREATE TABLE llx_subventions_financement(
 	montant_ref double DEFAULT NULL, 
 	fk_sub integer NOT NULL, 
 	fk_financeur integer NOT NULL,
+	accounted tinyint DEFAULT 0,
+	date_engagement date DEFAULT NULL,
+	fk_bookkeeping_receivable integer DEFAULT NULL,
+	fk_bookkeeping_product integer DEFAULT NULL,
 	entity integer DEFAULT 1 NOT NULL
 	-- END MODULEBUILDER FIELDS
 ) ENGINE=innodb;

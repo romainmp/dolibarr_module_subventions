@@ -2,6 +2,7 @@
 /* Copyright (C) 2017       Laurent Destailleur      <eldy@users.sourceforge.net>
  * Copyright (C) 2023-2024  Frédéric France          <frederic.france@free.fr>
  * Copyright (C) 2025		François Brichart			<francois@disqutons.fr>
+ * Copyright (C) 2026		Romain MP		<romain.mp@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -132,6 +133,14 @@ class Paiement extends CommonObject
 		"import_key" => array("type" => "varchar(14)", "label" => "ImportId", "enabled" => "1", 'position' => 1000, 'notnull' => -1, "visible" => "-2",),
 		"fk_sub" => array("type" => "integer:subvention:/custom/subventions/class/subvention.class.php", "label" => "Réf subvention", "enabled" => "1", 'position' => 25, 'notnull' => 0, "visible" => "1",),
 		"fk_fin" => array("type" => "integer:financement:/custom/subventions/class/financement.class.php", "label" => "Réf financement", "enabled" => "1", 'position' => 30, 'notnull' => 0, "visible" => "1",),
+		"fk_bank" => array("type" => "integer", "label" => "BankTransaction", "enabled" => "isModEnabled('banque')", 'position' => 52, 'notnull' => 0, "visible" => "0",),
+		"fk_account" => array("type" => "integer:Account:compta/bank/class/account.class.php:1:(t.clos:=:0)", "label" => "BankAccount", "picto" => "bank_account", "enabled" => "isModEnabled('banque')", 'position' => 53, 'notnull' => 0, "visible" => "1",),
+		"fk_paiement" => array("type" => "sellist:c_paiement:libelle:id::active=1", "label" => "PaymentMode", "enabled" => "1", 'position' => 54, 'notnull' => 0, "visible" => "1",),
+		"num_paiement" => array("type" => "varchar(50)", "label" => "NumPayment", "enabled" => "1", 'position' => 55, 'notnull' => 0, "visible" => "1",),
+		"accounted" => array("type" => "integer", "label" => "Accounted", "enabled" => "(isModEnabled('accounting') || isModEnabled('accountancy'))", 'position' => 60, 'notnull' => 0, "visible" => "1", "default" => "0", "csslist" => "center", "arrayofkeyval" => array("0" => "No", "1" => "Yes"),),
+		"date_engagement" => array("type" => "date", "label" => "EngagementDate", "enabled" => "(isModEnabled('accounting') || isModEnabled('accountancy'))", 'position' => 61, 'notnull' => 0, "visible" => "0",),
+		"fk_bookkeeping_bank" => array("type" => "integer", "label" => "BookkeepingBank", "enabled" => "(isModEnabled('accounting') || isModEnabled('accountancy'))", 'position' => 62, 'notnull' => 0, "visible" => "0",),
+		"fk_bookkeeping_receivable" => array("type" => "integer", "label" => "BookkeepingReceivable", "enabled" => "(isModEnabled('accounting') || isModEnabled('accountancy'))", 'position' => 63, 'notnull' => 0, "visible" => "0",),
 		"status" => array("type" => "integer", "label" => "Status", "enabled" => "1", 'position' => 2000, 'notnull' => 1, "visible" => "0", "noteditable" => "1", "default" => "1", "index" => "1", "arrayofkeyval" => array("0" => "Brouillon", "1" => "Valid&eacute;", "9" => "Annul&eacute;"), "validate" => "1",),
 		"entity" => array('type' => 'integer', 'label' => 'Entity', 'default' => '1', 'enabled' => 1, 'visible' => -2, 'notnull' => 1, 'position' => 15, 'index' => 1),
 	);
@@ -150,6 +159,15 @@ class Paiement extends CommonObject
 	public $import_key;
 	public $fk_sub;
 	public $fk_fin;
+	public $fk_bank;
+	public $fk_account;
+	public $fk_paiement;
+	public $num_paiement;
+	public $accounted = 0;
+	public $date_engagement;
+	public $fk_bookkeeping_bank;
+	public $fk_bookkeeping_receivable;
+	public $sub_label;
 	public $status;
 	public $entity;
 	// END MODULEBUILDER PROPERTIES
@@ -241,12 +259,19 @@ class Paiement extends CommonObject
 	{
 		$resultcreate = $this->createCommon($user, $notrigger);
 
-		// uncomment lines below if you want to validate object after creation
-		$this->fetch($this->id); // needed to retrieve some fields (ie date_creation for masked ref)
-		$resultvalidate = $this->validate($user, $notrigger);
+		if ($resultcreate > 0) {
+			// fetch to retrieve some fields (ie date_creation for masked ref)
+			$this->fetch($this->id);
+			$resultvalidate = $this->validate($user, $notrigger);
 
-		// Mise à jour des montants des financements liés
-		$resultmaj = majMontantsFinancementSubvention($this);
+			// Mise à jour des montants des financements liés
+			$resultmaj = majMontantsFinancementSubvention($this);
+
+			// Automatically create bank transaction if bank account was selected
+			if (!empty($this->fk_account) && $this->fk_account > 0 && empty($this->fk_bank) && isModEnabled('banque')) {
+				$this->addPaymentToBank($user, $this->fk_account, $this->fk_paiement, '', $this->num_paiement);
+			}
+		}
 
 		return $resultcreate;
 	}
@@ -387,8 +412,19 @@ class Paiement extends CommonObject
 	 */
 	public function delete(User $user, $notrigger = 0)
 	{
+		// If accounted in ledger, unbookkeep first
+		if (!empty($this->accounted)) {
+			$this->unbookkeep($user);
+		}
+
 		$result = $this->deleteCommon($user, $notrigger);
 		//return $this->deleteCommon($user, $notrigger, 1);
+
+		if ($result > 0 && !empty($this->fk_bank) && isModEnabled('banque')) {
+			require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+			$acc = new Account($this->db);
+			$acc->delete_line($user, $this->fk_bank);
+		}
 
 		// mise à jour des montants des financements liés
 		$resultmaj = majMontantsFinancementSubvention($this);
@@ -729,7 +765,9 @@ class Paiement extends CommonObject
 		if ($selected >= 0) {
 			$return .= '<input id="cb'.$this->id.'" class="flat checkforselect fright" type="checkbox" name="toselect[]" value="'.$this->id.'"'.($selected ? ' checked="checked"' : '').'>';
 		}
-		if (property_exists($this, 'label')) {
+		if (!empty($this->sub_label)) {
+			$return .= ' <div class="inline-block opacitymedium valignmiddle tdoverflowmax150" title="'.dol_escape_htmltag($this->sub_label).'">'.$this->sub_label.'</div>';
+		} elseif (property_exists($this, 'label')) {
 			$return .= ' <div class="inline-block opacitymedium valignmiddle tdoverflowmax100">'.$this->label.'</div>';
 		}
 		if (property_exists($this, 'thirdparty') && is_object($this->thirdparty)) {
@@ -999,6 +1037,389 @@ class Paiement extends CommonObject
 		dol_syslog(__METHOD__." end", LOG_INFO);
 
 		return $error;
+	}
+
+	/**
+	 * Update fk_bank in subventions_paiement table
+	 *
+	 * @param  int $bank_line_id ID of bank line in llx_bank
+	 * @return int               >0 if OK, <=0 if KO
+	 */
+	public function update_fk_bank($bank_line_id)
+	{
+		$this->fk_bank = $bank_line_id;
+		$sql = "UPDATE ".MAIN_DB_PREFIX."subventions_paiement SET fk_bank = ".((int) $bank_line_id)." WHERE rowid = ".((int) $this->id);
+		$resql = $this->db->query($sql);
+		if ($resql) {
+			return 1;
+		} else {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+	}
+
+	/**
+	 * Add payment to Dolibarr bank account (llx_bank)
+	 *
+	 * @param  User   $user             User making the action
+	 * @param  int    $accountid        Bank account ID (llx_bank_account)
+	 * @param  int    $paiement_type    Payment type ID or code from c_paiement
+	 * @param  string $label            Label for bank transaction
+	 * @param  string $num_paiement     Cheque/transfer reference number
+	 * @param  string $accountancy_code Receivable accountancy code (e.g. 4411)
+	 * @return int                      >0 if OK, <0 if KO
+	 */
+	public function addPaymentToBank($user, $accountid, $paiement_type = 0, $label = '', $num_paiement = '', $accountancy_code = '')
+	{
+		global $conf, $langs;
+
+		if (!isModEnabled("banque")) {
+			return 0;
+		}
+
+		if (empty($accountid) || $accountid <= 0) {
+			$this->error = $langs->trans("ErrorFieldRequired", $langs->transnoentitiesnoconv("BankAccount"));
+			return -1;
+		}
+
+		require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+		require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+		dol_include_once('/subventions/class/subvention.class.php');
+		dol_include_once('/subventions/class/financement.class.php');
+
+		$subvention = new Subvention($this->db);
+		if ($this->fk_sub > 0) {
+			$subvention->fetch($this->fk_sub);
+		}
+
+		$financement = new Financement($this->db);
+		if ($this->fk_fin > 0) {
+			$financement->fetch($this->fk_fin);
+		}
+
+		$thirdparty = new Societe($this->db);
+		$socid = $this->fk_soc > 0 ? $this->fk_soc : ($financement->fk_soc > 0 ? $financement->fk_soc : 0);
+		if ($socid > 0) {
+			$thirdparty->fetch($socid);
+		}
+
+		// Find receivable accountancy code if not specified
+		if (empty($accountancy_code)) {
+			if ($financement->fk_financeur > 0) {
+				$sqlf = "SELECT accountancy_code_receivable, accountancy_code FROM ".MAIN_DB_PREFIX."c_subventions_financeur WHERE rowid = ".((int) $financement->fk_financeur);
+				$resf = $this->db->query($sqlf);
+				if ($resf && ($objf = $this->db->fetch_object($resf))) {
+					$accountancy_code = !empty($objf->accountancy_code_receivable) ? $objf->accountancy_code_receivable : $objf->accountancy_code;
+				}
+			}
+			if (empty($accountancy_code)) {
+				$accountancy_code = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT', '441000');
+			}
+		}
+
+		// Resolve payment mode code
+		$paymentmode_code = 'VIR';
+		if (!empty($paiement_type)) {
+			if (is_numeric($paiement_type)) {
+				$sqlm = "SELECT code FROM ".MAIN_DB_PREFIX."c_paiement WHERE id = ".((int) $paiement_type);
+				$resm = $this->db->query($sqlm);
+				if ($resm && ($objm = $this->db->fetch_object($resm))) {
+					$paymentmode_code = $objm->code;
+				}
+			} else {
+				$paymentmode_code = (string) $paiement_type;
+			}
+		}
+
+		if (empty($label)) {
+			$label = $langs->trans("SubventionPayment").': '.($subvention->ref ? $subvention->ref.' - ' : '').$this->ref.($thirdparty->name ? ' ('.$thirdparty->name.')' : '');
+		}
+
+		$acc = new Account($this->db);
+		$result = $acc->fetch($accountid);
+		if ($result <= 0) {
+			$this->error = $langs->trans("ErrorBankAccountNotFound");
+			return -1;
+		}
+
+		// Insert payment into llx_bank
+		$bank_line_id = $acc->addline(
+			$this->datep,
+			$paymentmode_code,
+			$label,
+			(float) $this->montant,
+			$num_paiement,
+			0,
+			$user,
+			$thirdparty->name,
+			'',
+			$accountancy_code
+		);
+
+		if ($bank_line_id > 0) {
+			$this->fk_bank = $bank_line_id;
+			$this->fk_account = $accountid;
+			$this->fk_paiement = is_numeric($paiement_type) ? (int) $paiement_type : 0;
+			$this->num_paiement = $num_paiement;
+
+			$sql = "UPDATE ".MAIN_DB_PREFIX."subventions_paiement SET ";
+			$sql .= "fk_bank = ".((int) $bank_line_id).", ";
+			$sql .= "fk_account = ".((int) $accountid).", ";
+			$sql .= "fk_paiement = ".((int) $this->fk_paiement).", ";
+			$sql .= "num_paiement = '".$this->db->escape($num_paiement)."' ";
+			$sql .= "WHERE rowid = ".((int) $this->id);
+			$this->db->query($sql);
+
+			// Add link to subvention payment in bank_url
+			$url_paiement = dol_buildpath('/subventions/paiement_card.php', 1).'?id=';
+			$acc->add_url_line($bank_line_id, $this->id, $url_paiement, '(paiement)', 'payment_subvention');
+
+			// Add link to company in bank_url if thirdparty exists
+			if ($socid > 0) {
+				$url_soc = DOL_URL_ROOT.'/societe/card.php?socid=';
+				$acc->add_url_line($bank_line_id, $socid, $url_soc, $thirdparty->name, 'company');
+			}
+
+			return $bank_line_id;
+		} else {
+			$this->error = $acc->error;
+			$this->errors = $acc->errors;
+			return -1;
+		}
+	}
+
+	/**
+	 * Record accounting engagement in Dolibarr General Ledger (BookKeeping)
+	 *
+	 * @param  User   $user                User making the action
+	 * @param  int    $date_engagement     Timestamp date of engagement
+	 * @param  string $journal             Journal code (e.g. 'OD')
+	 * @param  string $account_bank        Bank / treasury account (e.g. '512000') - Debit
+	 * @param  string $account_receivable  Receivable account (e.g. '441000') - Credit
+	 * @param  string $label               Operation label
+	 * @param  string $subledger_account   Subledger account code (tiers)
+	 * @return int                         >0 if OK, <0 if KO
+	 */
+	public function bookkeep($user, $date_engagement, $journal = '', $account_bank = '', $account_receivable = '', $label = '', $subledger_account = '')
+	{
+		global $conf, $langs;
+
+		if (empty($this->montant) || $this->montant <= 0) {
+			$this->error = $langs->trans("ErrorNoAmountToBookkeep");
+			return -1;
+		}
+
+		if (!isModEnabled('accounting') && !isModEnabled('accountancy')) {
+			$this->error = $langs->trans("ErrorAccountancyModuleNotActive");
+			return -1;
+		}
+
+		require_once DOL_DOCUMENT_ROOT.'/core/lib/date.lib.php';
+		require_once DOL_DOCUMENT_ROOT.'/accountancy/class/bookkeeping.class.php';
+		require_once DOL_DOCUMENT_ROOT.'/societe/class/societe.class.php';
+		dol_include_once('/subventions/class/subvention.class.php');
+		dol_include_once('/subventions/class/financement.class.php');
+
+		$subvention = new Subvention($this->db);
+		if ($this->fk_sub > 0) {
+			$subvention->fetch($this->fk_sub);
+		}
+
+		$financement = new Financement($this->db);
+		if ($this->fk_fin > 0) {
+			$financement->fetch($this->fk_fin);
+		}
+
+		$thirdparty = new Societe($this->db);
+		$socid = $this->fk_soc > 0 ? $this->fk_soc : ($financement->fk_soc > 0 ? $financement->fk_soc : 0);
+		if ($socid > 0) {
+			$thirdparty->fetch($socid);
+		}
+
+		// Fallback for journal (prefer bank account's journal, then payment journal setting, then OD)
+		if (empty($journal)) {
+			$bank_journal = '';
+			if (!empty($this->fk_account)) {
+				require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+				$acc_tmp = new Account($this->db);
+				if ($acc_tmp->fetch($this->fk_account) > 0 && !empty($acc_tmp->fk_accountancy_journal)) {
+					$sqlj_acc = "SELECT code FROM ".MAIN_DB_PREFIX."accounting_journal WHERE rowid = ".((int) $acc_tmp->fk_accountancy_journal);
+					$resj_acc = $this->db->query($sqlj_acc);
+					if ($resj_acc && ($objj_acc = $this->db->fetch_object($resj_acc))) {
+						$bank_journal = $objj_acc->code;
+					}
+				}
+			}
+			$journal = !empty($bank_journal) ? $bank_journal : getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL_PAYMENT', 'BQ');
+			if (empty($journal)) {
+				$journal = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_JOURNAL', 'OD');
+			}
+		}
+
+		// Fallback for bank account (Class 5)
+		if (empty($account_bank)) {
+			if (!empty($this->fk_account)) {
+				require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
+				$acc_tmp = new Account($this->db);
+				if ($acc_tmp->fetch($this->fk_account) > 0 && !empty($acc_tmp->account_number)) {
+					$account_bank = $acc_tmp->account_number;
+				}
+			}
+			if (empty($account_bank)) {
+				$account_bank = '512000';
+			}
+		}
+
+		// Fallback for receivable account (Class 4)
+		if (empty($account_receivable)) {
+			if ($financement->fk_financeur > 0) {
+				$sqlf = "SELECT accountancy_code_receivable, accountancy_code FROM ".MAIN_DB_PREFIX."c_subventions_financeur WHERE rowid = ".((int) $financement->fk_financeur);
+				$resf = $this->db->query($sqlf);
+				if ($resf && ($objf = $this->db->fetch_object($resf))) {
+					$account_receivable = !empty($objf->accountancy_code_receivable) ? $objf->accountancy_code_receivable : $objf->accountancy_code;
+				}
+			}
+			if (empty($account_receivable)) {
+				$account_receivable = getDolGlobalString('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT', '441000');
+			}
+		}
+
+		$journal_label = 'Journal '.$journal;
+		$sqlj = "SELECT label FROM ".MAIN_DB_PREFIX."accounting_journal WHERE code = '".$this->db->escape($journal)."' AND entity = ".((int) $conf->entity);
+		$resj = $this->db->query($sqlj);
+		if ($resj && ($objj = $this->db->fetch_object($resj))) {
+			$journal_label = $objj->label;
+		}
+
+		if (empty($label)) {
+			$label = $langs->trans("SubventionPayment").': '.($subvention->ref ? $subvention->ref.' - ' : '').$this->ref.($thirdparty->name ? ' ('.$thirdparty->name.')' : '');
+		}
+
+		$this->db->begin();
+
+		// Line 1: Débit 512x (Trésorerie / Banque)
+		$bk1 = new BookKeeping($this->db);
+		$bk1->doc_date = $date_engagement;
+		$bk1->doc_type = 'subvention_paiement';
+		$bk1->doc_ref = ($subvention->ref ? $subvention->ref.' / ' : '').$this->ref;
+		$bk1->fk_doc = $this->id;
+		$bk1->fk_docdet = $this->id;
+		$bk1->thirdparty_code = !empty($thirdparty->code_client) ? $thirdparty->code_client : '';
+		$bk1->subledger_account = '';
+		$bk1->subledger_label = '';
+		$bk1->numero_compte = $account_bank;
+		$bk1->label_compte = $langs->trans("SubventionBankAccount");
+		$bk1->label_operation = $label;
+		$bk1->sens = 'D';
+		$bk1->debit = (float) $this->montant;
+		$bk1->credit = 0;
+		$bk1->montant = (float) $this->montant;
+		$bk1->code_journal = $journal;
+		$bk1->journal_label = $journal_label;
+		$bk1->fk_user_author = $user->id;
+		$bk1->entity = $conf->entity;
+
+		$res1 = $bk1->create($user);
+		if ($res1 < 0) {
+			$this->error = $bk1->error;
+			$this->errors = $bk1->errors;
+			$this->db->rollback();
+			return -1;
+		}
+
+		// Line 2: Crédit 441x (Créance de subvention)
+		$bk2 = new BookKeeping($this->db);
+		$bk2->doc_date = $date_engagement;
+		$bk2->doc_type = 'subvention_paiement';
+		$bk2->doc_ref = ($subvention->ref ? $subvention->ref.' / ' : '').$this->ref;
+		$bk2->fk_doc = $this->id;
+		$bk2->fk_docdet = $this->id;
+		$bk2->thirdparty_code = !empty($thirdparty->code_client) ? $thirdparty->code_client : (!empty($thirdparty->code_compta_client) ? $thirdparty->code_compta_client : '');
+		$bk2->subledger_account = !empty($subledger_account) ? $subledger_account : (!empty($thirdparty->code_compta_client) ? $thirdparty->code_compta_client : '');
+		$bk2->subledger_label = $thirdparty->name;
+		$bk2->numero_compte = $account_receivable;
+		$bk2->label_compte = $langs->trans("SubventionReceivableAccount");
+		$bk2->label_operation = $label;
+		$bk2->sens = 'C';
+		$bk2->debit = 0;
+		$bk2->credit = (float) $this->montant;
+		$bk2->montant = (float) $this->montant;
+		$bk2->code_journal = $journal;
+		$bk2->journal_label = $journal_label;
+		$bk2->piece_num = $bk1->piece_num;
+		$bk2->fk_user_author = $user->id;
+		$bk2->entity = $conf->entity;
+
+		$res2 = $bk2->create($user);
+		if ($res2 < 0) {
+			$this->error = $bk2->error;
+			$this->errors = $bk2->errors;
+			$this->db->rollback();
+			return -1;
+		}
+
+		$this->accounted = 1;
+		$this->date_engagement = $date_engagement;
+		$this->fk_bookkeeping_bank = $bk1->id;
+		$this->fk_bookkeeping_receivable = $bk2->id;
+
+		$sql = "UPDATE ".MAIN_DB_PREFIX."subventions_paiement SET ";
+		$sql .= "accounted = 1, ";
+		$sql .= "date_engagement = '".$this->db->idate($date_engagement)."', ";
+		$sql .= "fk_bookkeeping_bank = ".((int) $bk1->id).", ";
+		$sql .= "fk_bookkeeping_receivable = ".((int) $bk2->id)." ";
+		$sql .= "WHERE rowid = ".((int) $this->id);
+
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			$this->error = $this->db->lasterror();
+			$this->db->rollback();
+			return -1;
+		}
+
+		$this->db->commit();
+		return 1;
+	}
+
+	/**
+	 * Remove accounting engagement from Dolibarr General Ledger (BookKeeping)
+	 *
+	 * @param  User $user User cancelling the entry
+	 * @return int        >0 if OK, <0 if KO
+	 */
+	public function unbookkeep($user)
+	{
+		global $conf;
+
+		$this->db->begin();
+
+		// Delete bookkeeping entries linked to this payment
+		$sql = "DELETE FROM ".MAIN_DB_PREFIX."accounting_bookkeeping ";
+		$sql .= "WHERE doc_type = 'subvention_paiement' AND fk_doc = ".((int) $this->id)." AND entity = ".((int) $conf->entity);
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			$this->error = $this->db->lasterror();
+			$this->db->rollback();
+			return -1;
+		}
+
+		$this->accounted = 0;
+		$this->date_engagement = null;
+		$this->fk_bookkeeping_bank = null;
+		$this->fk_bookkeeping_receivable = null;
+
+		$sql2 = "UPDATE ".MAIN_DB_PREFIX."subventions_paiement SET ";
+		$sql2 .= "accounted = 0, date_engagement = NULL, fk_bookkeeping_bank = NULL, fk_bookkeeping_receivable = NULL ";
+		$sql2 .= "WHERE rowid = ".((int) $this->id);
+		$resql2 = $this->db->query($sql2);
+		if (!$resql2) {
+			$this->error = $this->db->lasterror();
+			$this->db->rollback();
+			return -1;
+		}
+
+		$this->db->commit();
+		return 1;
 	}
 }
 
