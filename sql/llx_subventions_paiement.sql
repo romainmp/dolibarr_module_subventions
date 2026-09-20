@@ -1,4 +1,5 @@
 -- Copyright (C) 2025		François Brichart			
+-- Copyright (C) 2026		Romain MP		<romain.mp@gmail.com>
 --
 -- This program is free software: you can redistribute it and/or modify
 -- it under the terms of the GNU General Public License as published by
@@ -31,6 +32,14 @@ CREATE TABLE llx_subventions_paiement(
 	import_key varchar(14), 
 	fk_sub integer, 
 	fk_fin integer, 
+	fk_bank integer,
+	fk_account integer,
+	fk_paiement integer,
+	num_paiement varchar(50),
+	accounted tinyint DEFAULT 0,
+	date_engagement date DEFAULT NULL,
+	fk_bookkeeping_bank integer DEFAULT NULL,
+	fk_bookkeeping_receivable integer DEFAULT NULL,
 	status integer DEFAULT 1 NOT NULL,
 	entity integer DEFAULT 1 NOT NULL
 	-- END MODULEBUILDER FIELDS

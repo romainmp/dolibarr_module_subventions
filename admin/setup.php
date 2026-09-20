@@ -2,6 +2,7 @@
 /* Copyright (C) 2004-2017  Laurent Destailleur     <eldy@users.sourceforge.net>
  * Copyright (C) 2024       Frédéric France         <frederic.france@free.fr>
  * Copyright (C) 2025		François Brichart		<francois@disqutons.fr>
+ * Copyright (C) 2026		Romain MP		<romain.mp@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -171,10 +172,44 @@ $item->defaultFieldValue = '50';
 $item->fieldAttr['placeholder'] = '% entre 0 et 100';
 
 // ACCOUNTANCY
-// TODO Implement accountancy parameters
-// $formSetup->newItem('AccountancyModule')->setAsTitle();
+$formSetup->newItem('AccountancyModule')->setAsTitle();
 
-// $item = $formSetup->newItem('SUBVENTIONS_DICO_COMPTA')->setAsYesNo();
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_ENABLED')->setAsYesNo();
+$item->defaultFieldValue = '1';
+
+// Journals list
+$TJournal = array('' => '');
+$TJournalPayment = array('' => '');
+if (isModEnabled('accounting') || isModEnabled('accountancy')) {
+	$sql = "SELECT rowid, code, label, nature FROM ".MAIN_DB_PREFIX."accounting_journal WHERE active = 1 ORDER BY label";
+	$resql = $db->query($sql);
+	if ($resql) {
+		while ($objj = $db->fetch_object($resql)) {
+			$label = $objj->code.' - '.$objj->label;
+			$TJournal[$objj->code] = $label;
+			$TJournalPayment[$objj->code] = $label;
+		}
+	}
+}
+if (empty($TJournal) || count($TJournal) <= 1) {
+	$TJournal['OD'] = 'OD - '.$langs->trans("VariousOperations");
+}
+if (empty($TJournalPayment) || count($TJournalPayment) <= 1) {
+	$TJournalPayment['BQ'] = 'BQ - '.$langs->trans("FinanceJournal");
+}
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_JOURNAL')->setAsSelect($TJournal);
+$item->defaultFieldValue = 'OD';
+
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_JOURNAL_PAYMENT')->setAsSelect($TJournalPayment);
+$item->defaultFieldValue = 'BQ';
+
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_CODE_RECEIVABLE_DEFAULT');
+$item->defaultFieldValue = '441000';
+$item->fieldAttr['placeholder'] = '441000';
+
+$item = $formSetup->newItem('SUBVENTIONS_ACCOUNTANCY_CODE_PRODUCT_DEFAULT');
+$item->defaultFieldValue = '740000';
+$item->fieldAttr['placeholder'] = '740000';
 
 // End of definition of parameters
 
