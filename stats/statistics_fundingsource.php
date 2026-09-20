@@ -5,6 +5,7 @@
  * Copyright (C) 2015       Jean-François Ferry     <jfefe@aternatik.fr>
  * Copyright (C) 2024       Frédéric France         <frederic.france@free.fr>
  * Copyright (C) 2025		François Brichart			<francois@disqutons.fr>
+ * Copyright (C) 2026		Romain MP		<romain.mp@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -258,7 +259,7 @@ foreach ($data as $val) {
 	else {$colorFinAcc = 'red';}
 
     print '<tr class="oddeven" height="24">';
-    print '<td align="left"><a href="'.dol_buildpath('custom/subventions/financement_list.php?search_fk_financeur='.$val['fk_financeur'].'">'.$val['nom'],1).'</a></td>';
+    print '<td align="left"><a href="'.dol_buildpath('/subventions/financement_list.php', 1).'?search_fk_financeur='.$val['fk_financeur'].'">'.$val['nom'].'</a></td>';
     print '<td class="center">'.$val['nb'].'</td>';
     print '<td class="right"><span class="amount">'.price(price2num($val['montant_dem'], 'MT'), 1).'</span></td>';
     print '<td class="right"><span class="amount">'.price(price2num($val['montant_acc'], 'MT'), 1).'</span></td>';
@@ -334,7 +335,7 @@ foreach ($data as $val) {
 
 	// Ligne de détail
     print '<tr class="oddeven" height="24">';
-    print '<td align="left"><a href="'.dol_buildpath('custom/subventions/financement_list.php?search_fk_soc='.$val['fk_soc'].'">'.$val['nom'],1).'</a></td>';
+    print '<td align="left"><a href="'.dol_buildpath('/subventions/financement_list.php', 1).'?search_fk_soc='.$val['fk_soc'].'">'.$val['nom'].'</a></td>';
     print '<td class="center">'.$val['nb'].'</td>';
     print '<td class="right"><span class="amount">'.price(price2num($val['montant_dem'], 'MT'), 1).'</span></td>';
     print '<td class="right"><span class="amount">'.price(price2num($val['montant_acc'], 'MT'), 1).'</span></td>';
