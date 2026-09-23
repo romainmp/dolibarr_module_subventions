@@ -705,6 +705,19 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 				}
 			}
 
+			// Create associated payment (only if Accordé and not fully paid)
+			if ($object->status == Financement::STATUS_ACCEPTED && $permissiontoadd) {
+				$remaining = (float) $object->montant_acc - (float) $object->montant_fin;
+				if ($remaining > 0) {
+					$urlNewPayment = dol_buildpath('/subventions/paiement_card.php', 1).'?action=create';
+					$urlNewPayment .= '&fk_sub='.$object->fk_sub;
+					$urlNewPayment .= '&fk_fin='.$object->id;
+					$urlNewPayment .= '&fk_soc='.$object->fk_soc;
+					$urlNewPayment .= '&backtopage='.urlencode($_SERVER['PHP_SELF'].'?id='.$object->id);
+					print dolGetButtonAction('', $langs->trans('AddAPayment'), 'default', $urlNewPayment, '', $permissiontoadd);
+				}
+			}
+
 			// Modify (available for all statuses if write permission)
 			print dolGetButtonAction('', $langs->trans('Modify'), 'default', $_SERVER["PHP_SELF"].'?id='.$object->id.'&action=edit&token='.newToken(), '', $permissiontoadd);
 
