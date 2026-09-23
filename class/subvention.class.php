@@ -163,6 +163,7 @@ class Subvention extends CommonObject
 	public $total_ht;
 	public $total_ttc;
 	public $fk_soc;
+	public $socid;
 	public $fk_project;
 	public $description;
 	public $evaluation;
@@ -396,6 +397,9 @@ class Subvention extends CommonObject
 	public function fetch($id, $ref = null, $noextrafields = 0, $nolines = 0)
 	{
 		$result = $this->fetchCommon($id, $ref, '', $noextrafields);
+		if ($result > 0) {
+			$this->socid = $this->fk_soc;
+		}
 		if ($result > 0 && !empty($this->table_element_line) && empty($nolines)) {
 			$this->fetchLines($noextrafields);
 		}
