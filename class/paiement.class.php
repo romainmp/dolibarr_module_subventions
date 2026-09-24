@@ -425,8 +425,13 @@ class Paiement extends CommonObject
 
 		if ($result > 0 && !empty($this->fk_bank) && isModEnabled('banque')) {
 			require_once DOL_DOCUMENT_ROOT.'/compta/bank/class/account.class.php';
-			$acc = new Account($this->db);
-			$acc->delete_line($user, $this->fk_bank);
+			$accline = new AccountLine($this->db);
+			$resfetch = $accline->fetch($this->fk_bank);
+			if ($resfetch == 0) {
+				$accline->id = $accline->rowid = $this->fk_bank;
+			}
+			$accline->delete_urls($user);
+			$accline->delete($user);
 		}
 
 		// mise à jour des montants des financements liés
