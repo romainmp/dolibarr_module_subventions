@@ -177,6 +177,7 @@ STATUS_FINANCED=Financé
 STATUS_EVALUATED=Bilan déposé
 STATUS_CLOTURED=Clôturé
 STATUS_REFUSED=Refusé
+STATUS_ARCHIVED=Archivé
 STATUS_CANCELED=Annulé
 FundingSourceType=Financeur
 ByFundingSource=Par financeurs

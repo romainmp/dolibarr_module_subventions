@@ -1049,24 +1049,25 @@ class Subvention extends CommonObject
 		if (empty($this->labelStatus) || empty($this->labelStatusShort)) {
 			global $langs;
 			//$langs->load("subventions@subventions");
-			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validated');
-			$this->labelStatus[self::STATUS_ACCEPTED] = $langs->transnoentitiesnoconv('Accepted');
-			$this->labelStatus[self::STATUS_FINANCED] = $langs->transnoentitiesnoconv('Financed');
-			$this->labelStatus[self::STATUS_EVALUATED] = $langs->transnoentitiesnoconv('Evaluated');
-			$this->labelStatus[self::STATUS_CLOTURED] = $langs->transnoentitiesnoconv('Clotured');
-			$this->labelStatus[self::STATUS_REFUSED] = $langs->transnoentitiesnoconv('Refused');
-			$this->labelStatus[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('Archived');
-			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Canceled');
-			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('Draft');
-			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('Validated');
-			$this->labelStatusShort[self::STATUS_ACCEPTED] = $langs->transnoentitiesnoconv('Accepted');
-			$this->labelStatusShort[self::STATUS_FINANCED] = $langs->transnoentitiesnoconv('Financed');
-			$this->labelStatusShort[self::STATUS_EVALUATED] = $langs->transnoentitiesnoconv('Evaluated');
-			$this->labelStatusShort[self::STATUS_CLOTURED] = $langs->transnoentitiesnoconv('Clotured');
-			$this->labelStatusShort[self::STATUS_REFUSED] = $langs->transnoentitiesnoconv('Refused');
-			$this->labelStatusShort[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('Archived');
-			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('Canceled');
+			$langs->load("subventions@subventions");
+			$this->labelStatus[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('STATUS_DRAFT');
+			$this->labelStatus[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('STATUS_VALIDATED');
+			$this->labelStatus[self::STATUS_ACCEPTED] = $langs->transnoentitiesnoconv('STATUS_ACCEPTED');
+			$this->labelStatus[self::STATUS_FINANCED] = $langs->transnoentitiesnoconv('STATUS_FINANCED');
+			$this->labelStatus[self::STATUS_EVALUATED] = $langs->transnoentitiesnoconv('STATUS_EVALUATED');
+			$this->labelStatus[self::STATUS_CLOTURED] = $langs->transnoentitiesnoconv('STATUS_CLOTURED');
+			$this->labelStatus[self::STATUS_REFUSED] = $langs->transnoentitiesnoconv('STATUS_REFUSED');
+			$this->labelStatus[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('STATUS_ARCHIVED');
+			$this->labelStatus[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('STATUS_CANCELED');
+			$this->labelStatusShort[self::STATUS_DRAFT] = $langs->transnoentitiesnoconv('STATUS_DRAFT');
+			$this->labelStatusShort[self::STATUS_VALIDATED] = $langs->transnoentitiesnoconv('STATUS_VALIDATED');
+			$this->labelStatusShort[self::STATUS_ACCEPTED] = $langs->transnoentitiesnoconv('STATUS_ACCEPTED');
+			$this->labelStatusShort[self::STATUS_FINANCED] = $langs->transnoentitiesnoconv('STATUS_FINANCED');
+			$this->labelStatusShort[self::STATUS_EVALUATED] = $langs->transnoentitiesnoconv('STATUS_EVALUATED');
+			$this->labelStatusShort[self::STATUS_CLOTURED] = $langs->transnoentitiesnoconv('STATUS_CLOTURED');
+			$this->labelStatusShort[self::STATUS_REFUSED] = $langs->transnoentitiesnoconv('STATUS_REFUSED');
+			$this->labelStatusShort[self::STATUS_ARCHIVED] = $langs->transnoentitiesnoconv('STATUS_ARCHIVED');
+			$this->labelStatusShort[self::STATUS_CANCELED] = $langs->transnoentitiesnoconv('STATUS_CANCELED');
 		}
 
 		$statusType = 'status'.$status;
